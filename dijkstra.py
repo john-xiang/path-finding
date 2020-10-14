@@ -31,27 +31,40 @@ def dijkstra(source, target, graph):
 
     current = source
     unvisited = list(graph)
-    dist = [999999 for nodes in unvisited]
-    dist[source] = 0
-    dist_ = dist.copy() # helps find the smallest tenative distance of unvisited nodes
-    path = []
+    # This tuple is (dist, dist, last node). 2nd dist is used to help find smallest
+    #   tentative distance
+    dist = [[999999, 999999, -1] for nodes in unvisited]
+    dist[source] = [0, 0, -1]
+    path = []           # stores the computed path from source to node
 
-    while not unvisited or target in unvisited:
+    while unvisited or target in unvisited:
         # compute the distance to travel to each neighbour node
-        for neighbours in graph[current]:
-            if dist[current] + 1 < dist[neighbours]:
-                dist[neighbours] = dist[current] + 1
-                dist_[neighbours] = dist[current] + 1
+        for neighbour in graph[current]:
+            if dist[current][0] + 1 < dist[neighbour][0]:
+                dist[neighbour][0] = dist[current][0] + 1
+                dist[neighbour][1] = dist[current][0] + 1
+                dist[neighbour][2] = current
+                #dist_[neighbour] = dist[current] + 1
 
-        unvisited.remove(current) # remove the current node from unvisited set
-        path.append(current)      # append the current node to the path
+        unvisited.remove(current)  # remove the current node from unvisited set
 
-        # select the next node with smallest distance [returns (position, value)]
-        dist_[current] = 0
-        small_dist = min(enumerate(dist_), key=lambda x: x[1] if x[1] > 0 else float('inf'))
-        current = small_dist[0]     # update the current node
+        # select the next node with smallest distance. small_dist stores the index
+        dist[current][1] = 0
+        small_dist = dist.index(min(dist, key=lambda x: x[1] if x[1] > 0 else float('inf')))
+        current = small_dist       # update the current node
 
-    print(path)
+    if dist[target][2] < 0:
+        # no path found
+        return -1
+
+    # find the computed path
+    node = target
+    path.append(node)
+    while len(path) <= dist[target][0]:
+        node = dist[node][2]
+        path.append(node)
+
+    return (path, dist[target][0])
 
 def main():
     """
@@ -66,15 +79,17 @@ def main():
     g[4] = [6, 10]
     g[5] = [3, 7]
     g[6] = [4, 7]
-    g[7] = [2, 5, 6]
+    g[7] = [1, 5, 6]
     g[8] = [9, 10, 11]
     g[9] = [8, 10, 11]
     g[10] = [4, 8, 9]
     g[11] = [2, 8, 9]
     g[12] = [0, 1, 2]
 
-    dijkstra(4, 12, g)
+    path, dist = dijkstra(4, 2, g)
 
+    print('The computed path is:', path)
+    print('The path is', dist, 'units long')
 
 if __name__ == "__main__":
     main()
