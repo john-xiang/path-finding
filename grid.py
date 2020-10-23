@@ -2,6 +2,7 @@
     ...
 """
 
+from collections import defaultdict
 import pygame
 
 # Define some colors
@@ -24,12 +25,10 @@ class Node:
     """
         ...
     """
-    def __init__(self, category='empty', colour=WHITE, pos=None):
+    def __init__(self, category='empty'):
         self.category = category    # categories = [start, end, empty, wall]
-        self.colour = colour
         self.path = False
         self.visited = False
-        self.pos = pos
 
 class Grid:
     """
@@ -39,7 +38,7 @@ class Grid:
         self.display = display
         self.nodesize = nodesize
         self.boardsize = boardsize
-        self.graph = (Node() for node in range(int(boardsize/nodesize)))
+        self.graph = defaultdict(Node)
 
     def render_grid(self):
         """
@@ -56,3 +55,6 @@ class Grid:
             end_hor = (self.boardsize, self.nodesize*i)
             pygame.draw.aaline(self.display, BLACK, start_vert, end_vert)
             pygame.draw.aaline(self.display, BLACK, start_hor, end_hor)
+
+        # instantiate the nodes
+        self.graph = (Node('empty') for nodes in range(cells*cells))

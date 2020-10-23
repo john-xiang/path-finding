@@ -52,6 +52,10 @@ def start():
     """
         ...
     """
+    # Variables for click and drag functions
+    clicked = False
+    drag = False
+
     pygame.init()
     pygame.display.set_caption('Path Finding Visualizer')
     display = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -72,16 +76,35 @@ def start():
                 # Quit the application
                 print('Shutting down...')
                 game_exit = True
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                (xpos, ypos) = pygame.mouse.get_pos()
-                (xpos, ypos) = (int(xpos/NODE_SIZE), int(ypos/NODE_SIZE))
 
-                print('clicked', (xpos, ypos))
-                grid_num = convert2single(xpos, ypos)
-                print('corresponding grid number: ', grid_num)
+            # Left click enables drag mode for building obstacles
+            #   right click sets the start and end nodes
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mousepos = pygame.mouse.get_pos()
+                (xpos, ypos) = (int(mousepos[0]/NODE_SIZE), int(mousepos[1]/NODE_SIZE))
+                if event.button == 1:   # right click sets start and end nodes
+                    clicked = True
+                    print('clicked', (xpos, ypos))
+                    grid_num = convert2single(xpos, ypos)
+                    print('corresponding grid number: ', grid_num)
+                elif event.button == 3: # left click starts drag mode
+                    drag = True
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                clicked = False
+                drag = False
+
+            elif event.type == pygame.MOUSEMOTION and drag:
+                mousepos = pygame.mouse.get_pos()
+                (xpos, ypos) = (int(mousepos[0]/NODE_SIZE), int(mousepos[1]/NODE_SIZE))
+                # locate the top left corner position of the square
+                xstart = ((xpos) * NODE_SIZE) + 1
+                ystart = ((ypos) * NODE_SIZE) + 1
+                # colour in the obstacle
+                pygame.draw.rect(display, BLACK, [xstart, ystart, NODE_SIZE-1, NODE_SIZE-1])
+
 
         pygame.display.update()
-
     pygame.quit()
 
 if __name__ == '__main__':
