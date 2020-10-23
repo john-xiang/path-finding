@@ -2,8 +2,6 @@
     ...
 """
 
-from collections import defaultdict
-
 # class Graph():
 
 #     def __init__(self, graph):
@@ -44,7 +42,6 @@ def dijkstra(source, target, graph):
                 dist[neighbour][0] = dist[current][0] + 1
                 dist[neighbour][1] = dist[current][0] + 1
                 dist[neighbour][2] = current
-                #dist_[neighbour] = dist[current] + 1
 
         unvisited.remove(current)  # remove the current node from unvisited set
 
@@ -65,31 +62,3 @@ def dijkstra(source, target, graph):
         path.append(node)
 
     return (path, dist[target][0])
-
-def main():
-    """
-        ...
-    """
-    g = defaultdict(list)
-
-    g[0] = [3, 1, 12]
-    g[1] = [0, 3, 7, 12]
-    g[2] = [11, 12]
-    g[3] = [0, 1, 5]
-    g[4] = [6, 10]
-    g[5] = [3, 7]
-    g[6] = [4, 7]
-    g[7] = [1, 5, 6]
-    g[8] = [9, 10, 11]
-    g[9] = [8, 10, 11]
-    g[10] = [4, 8, 9]
-    g[11] = [2, 8, 9]
-    g[12] = [0, 1, 2]
-
-    path, dist = dijkstra(4, 2, g)
-
-    print('The computed path is:', path)
-    print('The path is', dist, 'units long')
-
-if __name__ == "__main__":
-    main()
