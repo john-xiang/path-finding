@@ -4,23 +4,8 @@
 
 import pygame
 import grid as g
-
-# Define some colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-CREAM = (244, 244, 228)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-LIGHT_BLUE = (0, 111, 255)
-ORANGE = (255, 128, 0)
-PURPLE = (128, 0, 255)
-YELLOW = (255, 255, 0)
-GREY = (143, 143, 143)
-BROWN = (186, 127, 50)
-DARK_GREEN = (0, 128, 0)
-DARKER_GREEN = (0, 50, 0)
-DARK_BLUE = (0, 0, 128)
+import colour as col
+#import dijkstra
 
 # Define width and height
 WIDTH = 800
@@ -50,26 +35,35 @@ def convert2xy(num):
 
 def start():
     """
-        ...
+        Main function that handles the rendering and logic
     """
     # Variables for click and drag functions
     clicked = False
     drag = False
 
+    # initiate pygame
     pygame.init()
     pygame.display.set_caption('Path Finding Visualizer')
-    display = pygame.display.set_mode((WIDTH, HEIGHT))
-    display.fill(CREAM)
+    display = pygame.display.set_mode((WIDTH, HEIGHT+100))
+    display.fill(col.CREAM)
 
-    #############
+    # Initiate and render the grid
     grid = g.Grid(display, NODE_SIZE, WIDTH)
     grid.render_grid()
-    ##############
+    # Initiate and draw the start and end nodes
+    grid.graph[0].status = 'start'
+    grid.graph[LIMIT*LIMIT-1].status = 'end'
+    pygame.draw.rect(display, col.RED, [1, 1, NODE_SIZE-1, NODE_SIZE-1]) # (x, y, width, height)
+    pygame.draw.rect(display, col.GREEN, [761, 761, NODE_SIZE-1, NODE_SIZE-1])
 
+    # Draw buttons
+    pygame.draw.rect(display, col.GREY, [15, HEIGHT+15, 250, 75])
     # gameTime = pygame.time.Clock()
     game_exit = False
 
     while not game_exit:
+        # Get the mouse position
+        mousepos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -80,13 +74,13 @@ def start():
             # Left click enables drag mode for building obstacles
             #   right click sets the start and end nodes
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                mousepos = pygame.mouse.get_pos()
                 (xpos, ypos) = (int(mousepos[0]/NODE_SIZE), int(mousepos[1]/NODE_SIZE))
-                if event.button == 1:   # right click sets start and end nodes
+                if event.button == 1 and mousepos[1] < HEIGHT:   # right click sets start and end nodes
                     clicked = True
-                    print('clicked', (xpos, ypos))
-                    grid_num = convert2single(xpos, ypos)
-                    print('corresponding grid number: ', grid_num)
+                    if clicked:
+                        print('clicked', (xpos, ypos))
+                        grid_num = convert2single(xpos, ypos)
+                        print('corresponding grid number: ', grid_num)
                 elif event.button == 3: # left click starts drag mode
                     drag = True
 
@@ -95,14 +89,18 @@ def start():
                 drag = False
 
             elif event.type == pygame.MOUSEMOTION and drag:
-                mousepos = pygame.mouse.get_pos()
                 (xpos, ypos) = (int(mousepos[0]/NODE_SIZE), int(mousepos[1]/NODE_SIZE))
-                # locate the top left corner position of the square
-                xstart = ((xpos) * NODE_SIZE) + 1
-                ystart = ((ypos) * NODE_SIZE) + 1
-                # colour in the obstacle
-                pygame.draw.rect(display, BLACK, [xstart, ystart, NODE_SIZE-1, NODE_SIZE-1])
-
+                # convert positions to (x,y) coordinates
+                index = convert2single(xpos, ypos)
+                # only colour empty nodes witin the grid
+                if grid.graph[index].status == 'empty' and mousepos[1] < HEIGHT:
+                    # locate the top left corner position of the square
+                    xstart = ((xpos) * NODE_SIZE) + 1
+                    ystart = ((ypos) * NODE_SIZE) + 1
+                    # colour in the obstacle
+                    pygame.draw.rect(display, col.BLACK, [xstart, ystart, NODE_SIZE-1, NODE_SIZE-1])
+                    # change the status of nodes that have become obstacles ('wall')
+                    grid.graph[index].status = 'wall'
 
         pygame.display.update()
     pygame.quit()
