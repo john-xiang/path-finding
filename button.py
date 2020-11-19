@@ -1,6 +1,6 @@
 """
     Handles the functionality of all buttons.
-    Each button will need x, y, z, w
+    Each button will need x, y, width, height, message and font
 """
 
 import pygame
@@ -17,12 +17,18 @@ class Button:
     """
         Button class
     """
-    def __init__(self, xpos, ypos, font):
+    def __init__(self, xpos, ypos, font, width=None, height=None):
         self.xpos = xpos
         self.ypos = ypos
         self.font = font
-        self.width = 250
-        self.height = 75
+        if not width:
+            self.width = 250
+        else:
+            self.width = width
+        if not height:
+            self.height = 75
+        else:
+            self.height = height
         self.message = ''
 
     def render(self, display):
@@ -31,32 +37,59 @@ class Button:
         """
         pygame.draw.rect(display, col.GREY, [self.xpos, self.ypos, self.width, self.height])
 
-    # def quit(self, xpos, ypos, display):
-    #     """
-    #         Function which handles the QUIT button
-    #     """
-    #     self.message = 'Quit'
-    #     self.width = 250
-    #     self.height = 75
-    #     self.colour = col.GREY
-    #     self.act_colour = col.LT_GREY
-
-    def activate(self, x_pos, y_pos, display, action=None):
+    def quit(self, mousex, mousey, display):
         """
-            Function which starts dijkstra on the current grid
+            Function which handles the QUIT button
         """
-        self.message = 'Solve'
+        self.message = 'Quit'
         # create a text object which is a tuple containing the text and the
         #   surface to render on
         text = text_object(self.message, self.font)
         text[1].center = ((self.xpos+(self.width/2)), (self.ypos+(self.height/2)))
 
         # activates the button if mouse is within boundaries
-        if self.xpos < x_pos < self.xpos + self.width and self.ypos < y_pos < self.ypos+self.height:
+        if self.xpos < mousex < self.xpos+self.width and self.ypos < mousey < self.ypos+self.height:
             pygame.draw.rect(display, col.LT_GREY, [self.xpos, self.ypos, self.width, self.height])
             display.blit(text[0], text[1])
-            if action:
-                print('Solving...')
+        else:
+            pygame.draw.rect(display, col.GREY, [self.xpos, self.ypos, self.width, self.height])
+            display.blit(text[0], text[1])
+
+    def reset(self, mousex, mousey, display):
+        """
+            Funtion which handles the reset button
+        """
+        self.message = 'Reset'
+        # create a text object which is a tuple containing the text and the
+        #   surface to render on
+        text = text_object(self.message, self.font)
+        text[1].center = ((self.xpos+(self.width/2)), (self.ypos+(self.height/2)))
+
+        # activates the button if mouse is within boundaries
+        if self.xpos < mousex < self.xpos+self.width and self.ypos < mousey < self.ypos+self.height:
+            pygame.draw.rect(display, col.LT_GREY, [self.xpos, self.ypos, self.width, self.height])
+            display.blit(text[0], text[1])
+        else:
+            pygame.draw.rect(display, col.GREY, [self.xpos, self.ypos, self.width, self.height])
+            display.blit(text[0], text[1])
+
+    def activate(self, mousex, mousey, display):
+        """
+            Function which activates the selected solve method on the grid
+
+            NOTE: The mousex argument is the current mouse x position and is different
+                from self.xpos which is the x position of the button. Same goes for mousey.
+        """
+        self.message = 'Find Path'
+        # create a text object which is a tuple containing the text and the
+        #   surface to render on
+        text = text_object(self.message, self.font)
+        text[1].center = ((self.xpos+(self.width/2)), (self.ypos+(self.height/2)))
+
+        # activates the button if mouse is within boundaries
+        if self.xpos < mousex < self.xpos+self.width and self.ypos < mousey < self.ypos+self.height:
+            pygame.draw.rect(display, col.LT_GREY, [self.xpos, self.ypos, self.width, self.height])
+            display.blit(text[0], text[1])
         else:
             pygame.draw.rect(display, col.GREY, [self.xpos, self.ypos, self.width, self.height])
             display.blit(text[0], text[1])

@@ -9,6 +9,7 @@ for i in range(10):
 # for nodes in graph:
 #     print(nodes[0], nodes[1])
 
-l_graph = list(graph)
-for things in l_graph:
-    print(things)
+width = None
+
+if not width:
+    print('inside the if')

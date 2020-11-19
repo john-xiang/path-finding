@@ -97,7 +97,11 @@ def start():
 
     # Draw buttons
     solve_d = button.Button(15, HEIGHT+15, button_font)
+    reset = button.Button(635, HEIGHT+4, button_font, width=4*NODE_SIZE, height=45)
+    escape = button.Button(635, HEIGHT+reset.height+6, button_font, width=4*NODE_SIZE, height=45)
     solve_d.render(display)
+    reset.render(display)
+    escape.render(display)
 
     # start the game
     game_exit = False
@@ -106,12 +110,15 @@ def start():
         mousepos = pygame.mouse.get_pos()
         # Activate button
         solve_d.activate(mousepos[0], mousepos[1], display)
+        reset.reset(mousepos[0], mousepos[1], display)
+        escape.quit(mousepos[0], mousepos[1], display)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 # Quit the application
                 print('Shutting down...')
-                game_exit = True
+                pygame.quit()
+                quit()
 
             # Click functionalities (set source and target nodes, drag walls, buttons)
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -124,9 +131,17 @@ def start():
                         grid_num = convert2single(xpos, ypos)
                         print('corresponding grid number:', grid_num)
                         print('status:', grid.graph[xpos, ypos].status)
-                elif event.button == 1 and solve_d.ypos < mousepos[1] < solve_d.ypos+solve_d.height and solve_d.xpos < mousepos[0] < solve_d.xpos + solve_d.width:
-                    # this region is within the solve button
-                    solve = True
+                elif event.button == 1:     # button management
+                    if solve_d.ypos < mousepos[1] < solve_d.ypos+solve_d.height and solve_d.xpos < mousepos[0] < solve_d.xpos+solve_d.width:
+                        # this region is within the solve button
+                        solve = True
+                    if reset.ypos < mousepos[1] < reset.ypos+reset.height and reset.xpos < mousepos[0] < reset.xpos+reset.width:
+                        # this region is within the reset button
+                        start()
+                    if escape.ypos < mousepos[1] < escape.ypos+escape.height and escape.xpos < mousepos[0] < escape.xpos+escape.width:
+                        # this region is within the quit button
+                        pygame.quit()
+                        quit()
                 elif event.button == 3: # left click starts drag mode
                     drag = True
 
@@ -154,6 +169,7 @@ def start():
 
         pygame.display.update()
     pygame.quit()
+    quit()
 
 if __name__ == '__main__':
     start()
