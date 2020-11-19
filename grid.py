@@ -8,27 +8,16 @@ import pygame
 import colour as col
 
 
-def find_min(values):
-    """
-        Helper function that finds the key with minimum value
-    """
-    # find the next node with smallest distance
-    min_dist = None
-    min_key = None
-    for key, value in values.items():
-        if value[1] > 0 and (min_dist is None or value[1] < min_dist):
-            min_dist = value[1]
-            min_key = key
-
-    return min_key
-
-
 class Node:
     """
         ...
     """
-    def __init__(self, status='empty'):
+    def __init__(self, xpos, ypos, status='empty'):
         self.status = status    # categories = [start, end, empty, wall]
+        self.xpos = xpos
+        self.ypos = ypos
+        self.distance = 999999
+        self.previous = (-1, -1)
         self.neighbours = []
 
 
@@ -63,15 +52,15 @@ class Grid:
             pygame.draw.aaline(self.display, col.BLACK, start_hor, end_hor)
             for j in range(cells):  # initiate node object for each grid
                 if i < cells:
-                    self.graph[i, j] = Node()
+                    self.graph[i, j] = Node(i, j)
 
 
     def find_neighbours(self, node):
         """
             Finds the neighbours for a node which is not a wall.
             This function checks the top, bottom, left and right for neighbours.
-            If the neighbouring cell is a wall, then it will not be counted as a neighbour
-            TODO: currently too many if/else statements.
+                1) if the node in question is a wall, then no checks will be done
+                2) If the neighbouring cell is a wall, then it will not be counted as a neighbour
         """
         neighbours = []
         xpos = node[0]
@@ -79,72 +68,41 @@ class Grid:
         limit = int(self.boardsize/self.nodesize)
 
         if self.graph[node].status == 'wall':  # do not check nodes which are walls
-            return neighbours
+            self.graph[node].neighbours = []
+            return
 
-        # check the grids between (1, 1) to (limit-1, limit-1) which have 4 neighbours
-        if 1 <= xpos < limit-1 and 1 <= ypos < limit-1:
+        if xpos > 0:
             if self.graph[xpos-1, ypos] != 'wall':      # left
                 neighbours.append((xpos-1, ypos))
+        if xpos < limit-1:
             if self.graph[xpos+1, ypos] != 'wall':      # right
                 neighbours.append((xpos+1, ypos))
+        if ypos > 0:
             if self.graph[xpos, ypos-1] != 'wall':      # top
                 neighbours.append((xpos, ypos-1))
+        if ypos < limit-1:
             if self.graph[xpos, ypos+1] != 'wall':      # bottom
                 neighbours.append((xpos, ypos+1))
-        elif (xpos + ypos) == 0 or (xpos + ypos) == (limit - 1) or (xpos + ypos) == 2 * (limit - 1):
-            # corner positions
-            if xpos == 0:
-                if ypos == 0:
-                    if self.graph[xpos+1, ypos] != 'wall':      # right
-                        neighbours.append((xpos+1, ypos))
-                    if self.graph[xpos, ypos+1] != 'wall':      # bottom
-                        neighbours.append((xpos, ypos+1))
-                else:
-                    if self.graph[xpos+1, ypos] != 'wall':      # right
-                        neighbours.append((xpos+1, ypos))
-                    if self.graph[xpos, ypos-1] != 'wall':      # top
-                        neighbours.append((xpos, ypos-1))
-            elif ypos == 0:
-                if self.graph[xpos-1, ypos] != 'wall':      # left
-                    neighbours.append((xpos-1, ypos))
-                if self.graph[xpos, ypos+1] != 'wall':      # bottom
-                    neighbours.append((xpos, ypos+1))
-            else:
-                if self.graph[xpos-1, ypos] != 'wall':      # left
-                    neighbours.append((xpos-1, ypos))
-                if self.graph[xpos, ypos-1] != 'wall':      # top
-                    neighbours.append((xpos, ypos-1))
-        else:
-            if xpos < 1:    # left boundary
-                if self.graph[xpos+1, ypos] != 'wall':      # right
-                    neighbours.append((xpos+1, ypos))
-                if self.graph[xpos, ypos-1] != 'wall':      # top
-                    neighbours.append((xpos, ypos-1))
-                if self.graph[xpos, ypos+1] != 'wall':      # bottom
-                    neighbours.append((xpos, ypos+1))
-            if ypos < 1:    # top boundary
-                if self.graph[xpos-1, ypos] != 'wall':      # left
-                    neighbours.append((xpos-1, ypos))
-                if self.graph[xpos+1, ypos] != 'wall':      # right
-                    neighbours.append((xpos+1, ypos))
-                if self.graph[xpos, ypos+1] != 'wall':      # bottom
-                    neighbours.append((xpos, ypos+1))
-            if xpos == limit-1: # right bounadry
-                if self.graph[xpos, ypos-1] != 'wall':      # top
-                    neighbours.append((xpos, ypos-1))
-                if self.graph[xpos, ypos+1] != 'wall':      # bottom
-                    neighbours.append((xpos, ypos+1))
-                if self.graph[xpos-1, ypos] != 'wall':      # left
-                    neighbours.append((xpos-1, ypos))
-            if ypos == limit-1: # bottom boundary
-                if self.graph[xpos-1, ypos] != 'wall':      # left
-                    neighbours.append((xpos-1, ypos))
-                if self.graph[xpos+1, ypos] != 'wall':      # right
-                    neighbours.append((xpos+1, ypos))
-                if self.graph[xpos, ypos-1] != 'wall':      # top
-                    neighbours.append((xpos, ypos-1))
 
         self.graph[node].neighbours = neighbours
+
+
+    def find_min(self, visited_set):
+        """
+            Helper function that finds the index of the graph with minimum distance
+                NOTE: if the node is in the visited set then it won't be considered
+        """
+        # find the next node with smallest distance
+        min_dist = None
+        min_index = None
+        for index, node in self.graph.items():
+            if node.distance > 0 and (min_dist is None or node.distance < min_dist):
+                if index in visited_set:    # if node is visited, then don't consider
+                    continue
+                min_dist = node.distance
+                min_index = index
+
+        return min_index
 
 
     def dijkstra(self, source, target):
@@ -169,32 +127,24 @@ class Grid:
             The output is the computed path and the length of said path.
                 If there are no paths found, then -1 is returned.
         """
+        unvisited = list(self.graph)
+        visited = []
+        self.graph[source].distance = 0 # set the distance of source to 0
+        path = []           # stores the computed path from source to node
         size = self.nodesize
         current = source
-        unvisited = list(self.graph)
-        dist = defaultdict()
-        # This tuple is (dist, dist, last node). 2nd dist is used to help find smallest
-        #   tentative distance
-        for nodes in unvisited:
-            dist[nodes] = [999999, 999999, (-1, -1)]
-        dist[source] = [0, 0, (-1, -1)]
-        path = []           # stores the computed path from source to node
 
         while unvisited and target in unvisited:
             if self.graph[current].status == 'wall':
                 # skip the current node if it's a wall since we can't traverse it
                 unvisited.remove(current)  # remove the current node from unvisited set
-                dist[current][1] = 0
-                current = find_min(dist)
+                visited.append(current)
+                current = self.find_min(visited)
                 continue
-
+            tentative_dist = self.graph[current].distance + 1
             # compute the distance travelled for each neighbour node
             self.find_neighbours(current)
             for neighbour in self.graph[current].neighbours:
-                if self.graph[neighbour].status == 'wall':
-                    # if neighbour is a wall then skip
-                    continue
-
                 # render in the neighbours for the current computation
                 xpos = (neighbour[0] * size) + 1
                 ypos = (neighbour[1] * size) + 1
@@ -202,27 +152,29 @@ class Grid:
                     pygame.draw.rect(self.display, col.LT_BLUE, [xpos, ypos, size-1, size-1])
 
                 # update distance if it's smaller than current recorded distance
-                if dist[current][0] + 1 < dist[neighbour][0]:
-                    dist[neighbour][0] = dist[neighbour][1] = dist[current][0] + 1
-                    dist[neighbour][2] = current    # update where the node travelled from
+                if tentative_dist < self.graph[neighbour].distance:
+                    self.graph[neighbour].distance = tentative_dist
+                    # update where the node travelled from
+                    self.graph[neighbour].previous = current
 
                 pygame.display.update() # update display
 
-            time.sleep(0.02)            # set a small delay between nodes
+            time.sleep(0.015)            # set a small delay between nodes
             unvisited.remove(current)   # remove the current node from unvisited set
-            dist[current][1] = 0        # setting 0 means that node was visited
+            visited.append(current)
 
             # find the next node with smallest distance and update current node
-            current = find_min(dist)
+            current = self.find_min(visited)
 
-        if dist[target][2] == (-1, -1): # no path found
+        if self.graph[target].previous == (-1, -1): # no path found
             return -1
 
         # backtrack to find the full path
         node = target
+        path_dist = self.graph[target].distance
         path.append(node)
-        while len(path) <= dist[target][0]:
-            node = dist[node][2]
+        while len(path) <= path_dist:
+            node = self.graph[node].previous
             path.append(node)
 
-        return (path, dist[target][0])
+        return (path, path_dist)

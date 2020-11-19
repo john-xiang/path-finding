@@ -64,7 +64,7 @@ def render_path(source, target, path, display):
         ystart = (node[1] * NODE_SIZE) + 1
         # colour in the path
         pygame.draw.rect(display, col.YELLOW, [xstart, ystart, NODE_SIZE-1, NODE_SIZE-1])
-        time.sleep(0.05)
+        time.sleep(0.03)
         pygame.display.update()
 
 
