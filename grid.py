@@ -51,6 +51,7 @@ class Node:
         previous: what was the previous node that travelled to this node
         distance: computed distance from the source to this node
         fscore: computed fscore (fscorce = distance + heuristic(node, target))
+        infringe: boolean variable that determines if the node is in the fringe set
             NOTE: heuristic is a standalone function and computes the manhattan
             distance (abs(x1 - y1) + abs(x2 - y2))
     """
