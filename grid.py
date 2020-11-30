@@ -62,6 +62,7 @@ class Node:
         self.previous = (-1, -1)
         self.distance = math.inf
         self.fscore = math.inf
+        self.infringe = False
 
 class Grid:
     """
@@ -230,12 +231,11 @@ class Grid:
         path = []
         self.graph[source].distance = 0 # set the distance of source to 0
         self.graph[source].fscore = self.graph[source].distance + heuristic(source, target)
-        fringe.insert((0, source))
+        fringe.insert((0, 0, source))   # the heap descending on fscore, heuristic
 
         while fringe:
-            updated = False
             extracted_min = fringe.extract_min()
-            current = extracted_min[1]
+            current = extracted_min[2]
 
             if current == target:           # reached the target!
                 # backtrack to find the full path
@@ -261,19 +261,15 @@ class Grid:
                     # path through current node is better than previous path
                     self.graph[neighbour].distance = tentative_dist
                     self.graph[neighbour].previous = current
-                    self.graph[neighbour].fscore = tentative_dist + heuristic(neighbour, target)
+                    hvalue = heuristic(neighbour, target)
+                    self.graph[neighbour].fscore = tentative_dist + hvalue
 
-                    # update priority queue
-                    for index, node in enumerate(fringe.items()):
-                        if node == 0:
-                            continue
-                        if neighbour == node[1]:
-                            fringe.decrease_key(index, (self.graph[neighbour].fscore, neighbour))
-                            updated = True
                     # add neighbour to the fringe set if it's not yet in there
-                    if not updated:
-                        fringe.insert((self.graph[neighbour].fscore, neighbour))
-            time.sleep(0.01)
+                    if not self.graph[neighbour].infringe:
+                        self.graph[neighbour].infringe = True
+                        fringe.insert((self.graph[neighbour].fscore, hvalue, neighbour))
+
+            time.sleep(0.03)
             pygame.display.update() # update display
 
         # if loop finishes then fringe_set is empty and no paths are found
