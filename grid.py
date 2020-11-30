@@ -273,7 +273,7 @@ class Grid:
                     # add neighbour to the fringe set if it's not yet in there
                     if not updated:
                         fringe.insert((self.graph[neighbour].fscore, neighbour))
-
+            time.sleep(0.01)
             pygame.display.update() # update display
 
         # if loop finishes then fringe_set is empty and no paths are found

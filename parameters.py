@@ -5,7 +5,7 @@
 # Define display parameters
 WIDTH = 800
 HEIGHT = 800
-NODE_SIZE = 40
+NODE_SIZE = 20
 LIMIT = WIDTH // NODE_SIZE    # total number of cells
 
 # Font

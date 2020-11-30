@@ -79,7 +79,6 @@ def start():
     # Variables for click and drag functions
     clicked = False
     drag = False
-    solve = False
 
     # initiate pygame
     pygame.init()
@@ -103,11 +102,14 @@ def start():
     render_node(target, param.DRK_GREEN, display)   # render target node (green)
 
     # Draw buttons
-    solve_d = bt.Button(15, param.HEIGHT+15, 250, 75, 'Solve')
+    dijk = bt.Button(15, param.HEIGHT+4, (param.LIMIT/5)*param.NODE_SIZE, 45, 'Dijkstra')
+    astar = bt.Button(15, param.HEIGHT+dijk.height+6, \
+        (param.LIMIT/5)*param.NODE_SIZE, 45, 'A star')
     reset = bt.Button(635, param.HEIGHT+4, (param.LIMIT/5)*param.NODE_SIZE, 45, 'Reset')
     escape = bt.Button(635, param.HEIGHT+reset.height+6, \
         (param.LIMIT/5)*param.NODE_SIZE, 45, 'Quit')
-    solve_d.render(display)
+    dijk.render(display)
+    astar.render(display)
     reset.render(display)
     escape.render(display)
 
@@ -117,7 +119,8 @@ def start():
         # Get the mouse position
         mousepos = pygame.mouse.get_pos()
         # Activate button
-        solve_d.enable(*mousepos, display)
+        dijk.enable(*mousepos, display)
+        astar.enable(*mousepos, display)
         reset.enable(*mousepos, display)
         escape.enable(*mousepos, display)
 
@@ -140,10 +143,20 @@ def start():
                         print('corresponding grid number:', grid_num)
                         print('status:', grid.graph[xpos, ypos].status)
                 elif event.button == 1:     # button management
-                    if solve_d.ypos < mousepos[1] < solve_d.ypos+solve_d.height and \
-                        solve_d.xpos < mousepos[0] < solve_d.xpos+solve_d.width:
-                        # this region is within the solve button
-                        solve = True
+                    if dijk.ypos < mousepos[1] < dijk.ypos + dijk.height and \
+                        dijk.xpos < mousepos[0] < dijk.xpos + dijk.width:
+                        # this region is within the dijkstra solve button
+                        solution = grid.dijkstra(source, target)
+                        if solution != -1:
+                            # render in the blocks for the path found
+                            render_path(source, target, solution[0], display)
+                    if astar.ypos < mousepos[1] < astar.ypos + astar.height and \
+                        astar.xpos < mousepos[0] < astar.xpos + astar.width:
+                        # this region is within the astar solve button
+                        solution = grid.a_star(source, target)
+                        if solution != -1:
+                            # render in the blocks for the path found
+                            render_path(source, target, solution[0], display)
                     if reset.ypos < mousepos[1] < reset.ypos+reset.height and \
                         reset.xpos < mousepos[0] < reset.xpos+reset.width:
                         # this region is within the reset button
@@ -157,16 +170,7 @@ def start():
                     drag = True
 
             elif event.type == pygame.MOUSEBUTTONUP:
-                if solve:
-                    solution = grid.a_star(source, target)
-                    if solution != -1:
-                        # render in the blocks for the path found
-                        render_path(source, target, solution[0], display)
-                    else:
-                        print('No path found!')
-
                 # update click variables
-                solve = False
                 clicked = False
                 drag = False
 
