@@ -173,7 +173,7 @@ def start():
                         astar.xpos < mousepos[0] < astar.xpos + astar.width:    # astar solve button
 
                         clear_previous(grid.graph, display)   # clear the previous results
-                        solution = grid.a_star(source, target)
+                        solution = grid.astar(source, target)
 
                         if solution != -1:
                             # render in the blocks for the path found

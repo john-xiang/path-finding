@@ -12,7 +12,7 @@
             neighbours: the neighbours of the node
             distance: computed distance from the source to this node
             previous: what was the previous node that travelled to this node
-            fscore: computed fscore (fscorce = distance + heuristic(node, target))
+            fscore: computed fscore (fscore = distance + heuristic(node, target))
                 NOTE: heuristic is a standalone function and computes the manhattan
                 distance (abs(x1 - y1) + abs(x2 - y2))
 
@@ -26,6 +26,7 @@
 """
 
 from collections import defaultdict
+from collections import deque
 import math
 import time
 import random
@@ -50,8 +51,8 @@ class Node:
             ypos: the y position of the node on the grid
             previous: what was the previous node that travelled to this node
             distance: computed distance from the source to this node
-            fscore: computed fscore (fscorce = distance + heuristic(node, target))
-            infringe: boolean variable that determines if the node is in the fringe set
+            fscore: computed fscore (fscore = distance + heuristic(node, target))
+            visited: boolean variable that determines if the node is in the fringe set
 
         Methods:
             Move(new xpos, new ypos): moves the position of a node to the new position
@@ -64,7 +65,7 @@ class Node:
         self.previous = (-1, -1)
         self.distance = math.inf
         self.fscore = math.inf
-        self.infringe = False
+        self.visited = False
 
     def move(self, newx, newy):
         """
@@ -80,7 +81,7 @@ class Node:
         self.previous = (-1, -1)
         self.distance = math.inf
         self.fscore = math.inf
-        self.infringe = False
+        self.visited = False
 
 class Grid:
     """
@@ -195,12 +196,13 @@ class Grid:
                     c) remove the current node from the unvisited list and continue
                 5) Display result
 
-            Inputs: the graph, the source node and the target node.
+            Inputs: the source node and the target node.
             Outputs: the computed path and its length. If there are no paths then return -1
 
             Helper function
-                find_neighbours: used to help compute neighbours for a given node.
+                find_neighbours(node): used to help compute neighbours for a given node.
         """
+        start_time = time.time()
         visited = []    # stores the visited nodes
         self.graph[source].distance = 0 # set the distance of source to 0
         unvisited = minh.MinHeap()      # build the min heap priority queue
@@ -213,9 +215,13 @@ class Grid:
 
             if self.graph[current].distance == math.inf:
                 # the distance is inf only when there's no other nodes to consider
+                end_time = time.time() - start_time
+                print('Time elapsed:', end_time)
                 return -1
 
             if current == target:   # at the target node! don't need to search further
+                end_time = time.time() - start_time
+                print('Time elapsed:', end_time)
                 return self.find_path(target)
 
             if self.graph[current].status == 'wall':
@@ -241,9 +247,11 @@ class Grid:
                             unvisited.decrease_key(index, (tentative_dist, neighbour))
             pygame.display.update() # update display
         # no path found
+        end_time = time.time() - start_time
+        print('Time elapsed:', end_time)
         return -1
 
-    def a_star(self, source, target):
+    def astar(self, source, target):
         """
             The A* algorithm is an extention of Dijkstra where a heuristic is applied to
             guide the search towards the target node. The heuristic of choice here
@@ -266,45 +274,193 @@ class Grid:
                         3) Add the neighbour to the fringe set if it's not already in
                 4) if the fringe set is empty then we have not found a path!
 
-            Inputs: the graph, the source node and the target node
+            Inputs: the source node and the target node
             Outputs: The computed path and the length
 
             Helper Function:
-                find_neighbours: finds the neighbours for the current node
+                find_neighbours(node): finds the neighbours for the current node
+                heuristic(node, target): computes the heuristic value
         """
+        start_time = time.time()
         fringe = minh.MinHeap()
-        visited = []
-        self.graph[source].distance = 0 # set the distance of source to 0
+        self.graph[source].distance = 0     # set the distance of source to 0
+        # compute the fscore (fscore = distance + heuristic)
         self.graph[source].fscore = self.graph[source].distance + heuristic(source, target)
+        self.graph[source].visited = True   # mark as visited
         fringe.insert((self.graph[source].fscore, \
-            self.graph[source].distance, source))   # the heap descending on fscore, distance
+            self.graph[source].distance, source))   # insert source node (fscore, dist, node)
 
         while fringe:
+            # Set the current node as the node with minimum fscore value
             extracted_min = fringe.extract_min()
             current = extracted_min[2]
 
-            if current == target:           # reached the target!
+            if current == target:           # reached the target! return path
+                end_time = time.time() - start_time
+                print('Time elapsed:', end_time)
                 return self.find_path(target)
 
-            visited.append(current)         # add node to visited
             current_neighbours = self.find_neighbours(current)   # find neighbours
             tentative_dist = self.graph[current].distance + 1   # set the tentative distance
 
             for neighbour in current_neighbours:
-                if neighbour not in visited and tentative_dist < self.graph[neighbour].distance:
-                    # render the cells which are being considered for current computation
+                if not self.graph[neighbour].visited and \
+                    tentative_dist < self.graph[neighbour].distance:
+                    # the current path to the neighbour is better than the previous path
                     self.render_node(neighbour)
 
-                    # path through current node is better than previous path
+                    # Update distance, previous, fscore and visited
                     self.graph[neighbour].distance = tentative_dist
                     self.graph[neighbour].previous = current
                     self.graph[neighbour].fscore = tentative_dist + heuristic(neighbour, target)
+                    self.graph[neighbour].visited = True
 
-                    # add neighbour to the fringe set if it's not yet in there
-                    if not self.graph[neighbour].infringe:
-                        self.graph[neighbour].infringe = True
-                        fringe.insert((self.graph[neighbour].fscore, tentative_dist, neighbour))
-                time.sleep(0.0005)
+                    # Add the node to the fringe set
+                    fringe.insert((self.graph[neighbour].fscore, tentative_dist, neighbour))
             pygame.display.update() # update display
         #no paths are found
+        end_time = time.time() - start_time
+        print('Time elapsed:', end_time)
+        return -1
+
+    def greedy(self, source, target):
+        """
+            The greedy best-first search is a greedy algorithm that only considers the
+            heuristic value and chooses the best option at each iteration during the search.
+            This algorithm is not guaranteed to find the shortest path but will generally
+            find a path very quickly if one exists. The heuristic of choice will be the
+            Manhattan distance.
+
+            The algorithm works as follows:
+                1) Initialize the distance from all nodes to target as infinity
+                2) Set the distance of the source node to heuristic(source, target)
+                3) Repeat until the fringe set is empty
+                    a) Set the current node to be minimum distance in the fringe set
+                    b) if the current node is the target then finished!
+                    c) otherwise remove current node from the fringe set and add to
+                    the visited set
+                    d) For every child of the current node that is not in visited set
+                        i) Set the distance of the node as heuristic(child, target)
+                        ii) insert the child to the fringe set if not in already
+                4) if fringe set is empty then there are no paths found
+
+            Inputs: source node and target node
+            Outputs: path from source to target, not guaranteed optimal
+
+            Helper function:
+                find_neighbours(node): finds the neighbours of a node
+                heuristic(node, target): computes the heuristic value
+        """
+        start_time = time.time()
+        fringe = minh.MinHeap()
+        self.graph[source].distance = 0         # set the initial distance to 0
+        self.graph[source].fscore = heuristic(source, target)   # set heuristic (source, target)
+        fringe.insert((self.graph[source].fscore, source))      # insert source to fringe set
+        self.graph[source].visited = True                       # mark as visited
+
+        while fringe:
+            # Set the current node as the node with minimum distance (heuristic)
+            extracted_min = fringe.extract_min()
+            current = extracted_min[1]
+
+            if current == target:   #reached the target! return path
+                end_time = time.time() - start_time
+                print('Time elapsed:', end_time)
+                return self.find_path(target)
+
+            current_neighbours = self.find_neighbours(current)  # find neighbours
+
+            for neighbour in current_neighbours:
+                if not self.graph[neighbour].visited:
+                    # Compute the distance (heuristic) of all neighbours and add to fringe set
+                    self.render_node(neighbour)
+
+                    # Update previous, fscore, distance and visited
+                    self.graph[neighbour].previous = current
+                    self.graph[neighbour].fscore = heuristic(neighbour, target)
+                    self.graph[neighbour].distance = self.graph[current].distance + 1
+                    self.graph[neighbour].visited = True
+
+                    # Insert into fringe
+                    fringe.insert((self.graph[neighbour].fscore, neighbour))
+                pygame.display.update()
+        # no paths found
+        end_time = time.time() - start_time
+        print('Time elapsed:', end_time)
+        return -1
+
+    def bfs(self, source, target):
+        """
+            The breadth-first search algorithm searches through each node of the
+            current depth of the graph before moving onto the next depth level. BFS
+            is a brute force algorithm that visits all the nodes and gurantees that
+            the path found is optimal (from the source to target node).
+
+            The data structure for this algorithm will be a queue. I will be using
+            collections.deque instead of implenting one from scratch
+        """
+        start_time = time.time()
+        fringe = deque()
+        self.graph[source].distance = 0
+        self.graph[source].visited = True
+        fringe.append(source)
+
+        while fringe:
+            current = fringe.popleft()
+
+            if current == target:   # reached the target! return path
+                end_time = time.time() - start_time
+                print('Time elapsed:', end_time)
+                return self.find_path(target)
+
+            current_neighbours = self.find_neighbours(current)  # find neighbours
+
+            for neighbour in current_neighbours:
+                if not self.graph[neighbour].visited:
+                    self.render_node(neighbour)
+
+                    self.graph[neighbour].previous = current
+                    self.graph[neighbour].distance = self.graph[current].distance + 1
+                    self.graph[neighbour].visited = True
+
+                    fringe.append(neighbour)
+            pygame.display.update()
+        # no paths found!
+        end_time = time.time() - start_time
+        print('Time elapsed:', end_time)
+        return -1
+
+    def dfs(self, source, target):
+        """
+            ...
+        """
+        start_time = time.time()
+        fringe = deque()
+        self.graph[source].distance = 0
+        fringe.append(source)
+
+        while fringe:
+            current = fringe.pop()
+            self.graph[current].visited = True
+
+            if current == target:
+                end_time = time.time() - start_time
+                print('Time elapsed:', end_time)
+                return self.find_path(target)
+
+            current_neighbours = self.find_neighbours(current)
+
+            for neighbour in current_neighbours:
+                if not self.graph[neighbour].visited:
+
+                    self.render_node(neighbour)
+
+                    self.graph[neighbour].previous = current
+                    self.graph[neighbour].distance = self.graph[current].distance + 1
+                    self.graph[neighbour].visited = True
+
+                    fringe.append(neighbour)
+                pygame.display.update()
+        end_time = time.time() - start_time
+        print('Time elapsed:', end_time)
         return -1
