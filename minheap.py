@@ -9,7 +9,10 @@
 
 class MinHeap:
     """
-    MinHeap class will contain the following methods
+    Init:
+        heap: initializes an array to represent the heap
+
+    Methods:
         Constructor() - initializes an empty binary heap
         insert(node) - inserts node into the heap
         find_min() - returns the minimum value in the heap
@@ -23,29 +26,34 @@ class MinHeap:
 
     def __len__(self):
         """
-        Returns the size of the heap.
-        There is a -1 because of the extra 0 at 0th index
+            Returns the size of the heap.
+            There is a -1 because of the extra 0 at 0th index
         """
         return len(self.heap) - 1
 
     def items(self):
         """
-        Returns the keys in the heap
+            Returns the heap so that the keys can be iterated
         """
         return self.heap
 
     def decrease_key(self, index, new_key):
         """
-        Modifies the key at specified index in the heap
+            Modifies the key at specified index in the heap and applies heaify
+            to ensure the heap structure is kept
         """
         self.heap[index] = new_key  # modify the key
         self.heapify_up(index)      # fix the heap structure
 
     def heapify_up(self, index):
         """
-        Fixes the heap structure after inserting. This ensures that the
-        min heap structure is kept (the parent node is smaller than
-        both children nodes)
+            Fixes the heap structure after inserting. This ensures that the
+            min heap structure is kept (the parent node is smaller than
+            both children nodes)
+
+            This is done by comparing the current node with its parent and if it
+            is smaller than the parent we swap their positions. Repeat until no
+            more swaps are needed or if we checked the root
         """
         while index // 2 > 0:
             if self.heap[index] < self.heap[index // 2]:
@@ -58,46 +66,52 @@ class MinHeap:
 
     def heapify_down(self, index):
         """
-        Fixes the heap structure after extraction.
+            Fixes the heap structure after inserting. This ensures that the
+            min heap structure is kept (the parent node is smaller than
+            both children nodes)
+
+            This is done by comparing the current node its children and if
+            either children are smaller we swap their positions. Repeat until no
+            more swaps are needed or if we checked the root
         """
         while index * 2 <= len(self):
             # Find the child with minimum value
             left_child = index * 2
             right_child = index * 2 + 1
             min_child = None
-            if right_child > len(self) or \
-                self.heap[left_child] < self.heap[right_child]:
+            if right_child > len(self):
+                min_child = left_child
+            elif self.heap[left_child] < self.heap[right_child]:
                 min_child = left_child
             else:
                 min_child = right_child
 
             # If the minimum children is smaller than parent, then swap places
-            if self.heap[index] > self.heap[min_child]:
+            if self.heap[min_child] < self.heap[index]:
                 self.heap[index], self.heap[min_child] = \
                     self.heap[min_child], self.heap[index]
-
             index = min_child
 
     def insert(self, node):
         """
-        Inserts a node into the heap.
+            Inserts a node into the heap.
         """
         self.heap.append(node)
         self.heapify_up(len(self))
 
     def find_min(self):
         """
-        returns the minimum of the heap (first element)
+            returns the minimum of the heap (first element)
         """
         return self.heap[1]
 
     def extract_min(self):
         """
-        returns the node with minimum value (root node).
+            returns the node with minimum value (root node).
 
-        puts the last element in the heap to the min spot and
-        swaps with its new children nodes until the heap structure
-        is satisfied again.
+            puts the last element in the heap to the min spot and
+            swaps with its new children nodes until the heap structure
+            is satisfied again.
         """
         min_value = self.heap[1]
         # move the last element to the root
@@ -110,7 +124,7 @@ class MinHeap:
 
     def build_heap(self, array):
         """
-        Converts an array into a min heap
+            Converts an array into a min heap
         """
         index = len(array) // 2
         self.heap[1::] = array

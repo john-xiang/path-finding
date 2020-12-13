@@ -1,10 +1,12 @@
 """
     This file contains some predefined parameter values
 """
+# Chance for random obstacles
+CHANCE = 0.17
 
 # Define display parameters
-WIDTH = 800
-HEIGHT = 800
+WIDTH = 900
+HEIGHT = 900
 NODE_SIZE = 20
 LIMIT = WIDTH // NODE_SIZE    # total number of cells
 
