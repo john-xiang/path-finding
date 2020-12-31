@@ -117,12 +117,12 @@ def start():
     grid.generate_obstacles()
 
     # Draw buttons
-    dijk = bt.Button(15, param.HEIGHT+4, (param.LIMIT/5)*param.NODE_SIZE, 45, 'Dijkstra')
-    astar = bt.Button(15, param.HEIGHT+dijk.height+6, \
+    dijk = bt.Button(5, param.HEIGHT+4, (param.LIMIT/5)*param.NODE_SIZE, 45, 'Dijkstra')
+    astar = bt.Button(5, param.HEIGHT+dijk.height+6, \
         (param.LIMIT/5)*param.NODE_SIZE, 45, 'A star')
-    reset = bt.Button(param.HEIGHT - (param.LIMIT/5)*param.NODE_SIZE - 15, \
+    reset = bt.Button(param.HEIGHT - (param.LIMIT/5)*param.NODE_SIZE - 5, \
         param.HEIGHT+4, (param.LIMIT/5)*param.NODE_SIZE, 45, 'Randomize')
-    escape = bt.Button(param.HEIGHT - (param.LIMIT/5)*param.NODE_SIZE - 15, \
+    escape = bt.Button(param.HEIGHT - (param.LIMIT/5)*param.NODE_SIZE - 5, \
         param.HEIGHT+reset.height+6, (param.LIMIT/5)*param.NODE_SIZE, 45, 'Quit')
     dijk.render(display)
     astar.render(display)
