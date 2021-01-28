@@ -52,7 +52,7 @@ class Node:
             previous: what was the previous node that travelled to this node
             distance: computed distance from the source to this node
             fscore: computed fscore (fscore = distance + heuristic(node, target))
-            visited: boolean variable that determines if the node is in the fringe set
+            visited: boolean variable that determines if the node is in the openset set
 
         Methods:
             Move(new xpos, new ypos): moves the position of a node to the new position
@@ -256,17 +256,17 @@ class Grid:
             The algorithm works as follows:
                 1) Initiate two sets, one is for nodes that have been visited and the
                     other is for nodes who are currently being considered for expansion
-                2) Push the current node (source node is first) to the fringe set
-                3) Repeat until the fringe set is empty:
-                    1) find the node with smallest fscore in fringe set and set as current node
+                2) Push the current node (source node is first) to the openset set
+                3) Repeat until the openset set is empty:
+                    1) find the node with smallest fscore in openset set and set as current node
                     2) If the current node is the target node then finish!
-                    3) otherwise remove the current node from the fringe set and add to visited set
+                    3) otherwise remove the current node from the openset set and add to visited set
                     4) Check each neighbour of the current node:
                         1) Compute the tentative distance
                         2) if the tentative distance is less than the neighbour's distance
                             then update the distance to be the tentative distance
-                        3) Add the neighbour to the fringe set if it's not already in
-                4) if the fringe set is empty then we have not found a path!
+                        3) Add the neighbour to the openset set if it's not already in
+                4) if the openset set is empty then we have not found a path!
 
             Inputs: the source node and the target node
             Outputs: The computed path and the length
@@ -275,18 +275,18 @@ class Grid:
                 find_neighbours(node): finds the neighbours for the current node
                 heuristic(node, target): computes the heuristic value
         """
-        fringe = minh.MinHeap()
+        openset = minh.MinHeap()
         self.graph[source].distance = 0     # set the distance of source to 0
         # pre-compute the heuristic value for all nodes
         heuristic_value = dict((node, heuristic(node, target)) for node in self.graph)
         # compute the fscore (fscore = distance + heuristic)
         self.graph[source].fscore = self.graph[source].distance + heuristic_value[source]
         # insert source node (fscore, dist, node)
-        fringe.insert((self.graph[source].fscore, self.graph[source].distance, source))
+        openset.insert((self.graph[source].fscore, self.graph[source].distance, source))
 
-        while fringe:
+        while openset:
             # Set the current node as the node with minimum fscore value
-            extracted_min = fringe.extract_min()
+            extracted_min = openset.extract_min()
             current = extracted_min[2]
 
             if current == target:           # reached the target! return path
@@ -298,18 +298,17 @@ class Grid:
             tentative_dist = self.graph[current].distance + 1   # set the tentative distance
 
             for neighbour in current_neighbours:
-                if not self.graph[neighbour].visited and \
-                    tentative_dist < self.graph[neighbour].distance:
-
+                if not self.graph[neighbour].visited:
                     # Update distance, previous, fscore
-                    self.graph[neighbour].distance = tentative_dist
-                    self.graph[neighbour].previous = current
-                    self.graph[neighbour].fscore = tentative_dist + heuristic_value[neighbour]
+                    if tentative_dist < self.graph[neighbour].distance:
+                        self.graph[neighbour].distance = tentative_dist
+                        self.graph[neighbour].previous = current
+                        self.graph[neighbour].fscore = tentative_dist + heuristic_value[neighbour]
 
-                    # Add the node to the fringe set
+                    # Add the node to the openset set
                     if not self.graph[neighbour].inset:
                         self.graph[neighbour].inset = True
-                        fringe.insert((self.graph[neighbour].fscore, tentative_dist, neighbour))
+                        openset.insert((self.graph[neighbour].fscore, tentative_dist, neighbour))
                 pygame.display.update() # update display
         #no paths are found
         return -1
@@ -325,15 +324,15 @@ class Grid:
             The algorithm works as follows:
                 1) Initialize the distance from all nodes to target as infinity
                 2) Set the distance of the source node to heuristic(source, target)
-                3) Repeat until the fringe set is empty
-                    a) Set the current node to be minimum distance in the fringe set
+                3) Repeat until the openset set is empty
+                    a) Set the current node to be minimum distance in the openset set
                     b) if the current node is the target then finished!
-                    c) otherwise remove current node from the fringe set and add to
+                    c) otherwise remove current node from the openset set and add to
                     the visited set
                     d) For every child of the current node that is not in visited set
                         i) Set the distance of the node as heuristic(child, target)
-                        ii) insert the child to the fringe set if not in already
-                4) if fringe set is empty then there are no paths found
+                        ii) insert the child to the openset set if not in already
+                4) if openset set is empty then there are no paths found
 
             Inputs: source node and target node
             Outputs: path from source to target, not guaranteed optimal
@@ -342,15 +341,15 @@ class Grid:
                 find_neighbours(node): finds the neighbours of a node
                 heuristic(node, target): computes the heuristic value
         """
-        fringe = minh.MinHeap()
+        openset = minh.MinHeap()
         self.graph[source].distance = 0         # set the initial distance to 0
         # pre-compute the heuristic value for all nodes
         heuristic_value = dict((node, heuristic(node, target)) for node in self.graph)
-        fringe.insert((heuristic_value[source], source))      # insert source to fringe set
+        openset.insert((heuristic_value[source], source))      # insert source to openset set
 
-        while fringe:
+        while openset:
             # Set the current node as the node with minimum heuristic value
-            extracted_min = fringe.extract_min()
+            extracted_min = openset.extract_min()
             current = extracted_min[1]
 
             if current == target:   #reached the target! return path
@@ -359,19 +358,21 @@ class Grid:
             self.graph[current].visited = True                  # mark as visited
             self.render_node(current, param.LT_BLUE)            # render current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
+            tentative_dist = self.graph[current].distance + 1   # set the tentative distance
 
             for neighbour in current_neighbours:
-                # Compute the distance (heuristic) of all neighbours and add to fringe set
+                # Compute the distance (heuristic) of all neighbours and add to openset set
                 if not self.graph[neighbour].visited:
+                    # Update previous, distance if tentative distance is better
+                    if tentative_dist < self.graph[neighbour].distance:
+                        self.graph[neighbour].previous = current
+                        self.graph[neighbour].distance = tentative_dist
 
-                    # Update previous, distance
-                    self.graph[neighbour].previous = current
-                    self.graph[neighbour].distance = self.graph[current].distance + 1
-
-                    # Insert into fringe
+                    # Insert into openset
                     if not self.graph[neighbour].inset:
                         self.graph[neighbour].inset = True
-                        fringe.insert((heuristic_value[neighbour], neighbour))
+                        openset.insert((heuristic_value[neighbour], neighbour))
+                time.sleep(0.003)
                 pygame.display.update()
         # no paths found
         return -1
@@ -387,12 +388,12 @@ class Grid:
             The data structure for this algorithm will be a queue. I will be using
             collections.deque instead of implenting one from scratch
         """
-        fringe = deque()
-        self.graph[source].distance = 0
-        fringe.append(source)
+        openset = deque()
+        self.graph[source].distance = 0     # set initial distance to 0
+        openset.append(source)              # insert the source node into the open set
 
-        while fringe:
-            current = fringe.popleft()
+        while openset:
+            current = openset.popleft()
 
             if current == target:   # reached the target! return path
                 return self.find_path(target)
@@ -400,16 +401,19 @@ class Grid:
             self.graph[current].visited = True                  # mark as visited
             self.render_node(current, param.LT_BLUE)            # render current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
+            tentative_dist = self.graph[current].distance + 1   # tentative distance
 
             for neighbour in current_neighbours:
                 if not self.graph[neighbour].visited:
+                    if tentative_dist < self.graph[neighbour].distance:
+                        # update the previous and distance
+                        self.graph[neighbour].previous = current
+                        self.graph[neighbour].distance = self.graph[current].distance + 1
 
-                    self.graph[neighbour].previous = current
-                    self.graph[neighbour].distance = self.graph[current].distance + 1
-
+                    # add the neighbour into the queue if it wasn't in it before
                     if not self.graph[neighbour].inset:
                         self.graph[neighbour].inset = True
-                        fringe.append(neighbour)
+                        openset.append(neighbour)
             pygame.display.update()
         # no paths found!
         return -1
@@ -418,28 +422,32 @@ class Grid:
         """
             ...
         """
-        fringe = deque()
-        self.graph[source].distance = 0
-        fringe.append(source)
+        openset = deque()
+        self.graph[source].distance = 0     # set initial distance to 0
+        openset.append(source)
 
-        while fringe:
-            current = fringe.pop()
+        while openset:
+            current = openset.pop()
 
-            if current == target:
+            if current == target:       # reached target! return path
                 return self.find_path(target)
 
-            self.graph[current].visited = True
-            self.render_node(current, param.LT_BLUE)
-            current_neighbours = self.find_neighbours(current)
+            self.graph[current].visited = True                  # mark current node as visited
+            self.render_node(current, param.LT_BLUE)            # render the current node
+            current_neighbours = self.find_neighbours(current)  # find neighbours
+            tentative_dist = self.graph[current].distance + 1
 
             for neighbour in current_neighbours:
                 if not self.graph[neighbour].visited:
+                    if tentative_dist < self.graph[neighbour].distance:
+                        # update the previous node and distance
+                        self.graph[neighbour].previous = current
+                        self.graph[neighbour].distance = self.graph[current].distance + 1
 
-                    self.graph[neighbour].previous = current
-                    self.graph[neighbour].distance = self.graph[current].distance + 1
-
+                    # add the node into the stack if it wasn't in it before
                     if not self.graph[neighbour].inset:
                         self.graph[neighbour].inset = True
-                        fringe.append(neighbour)
+                        openset.append(neighbour)
                 pygame.display.update()
+        # no path found
         return -1

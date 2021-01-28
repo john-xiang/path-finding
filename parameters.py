@@ -5,10 +5,16 @@
 CHANCE = 0.17
 
 # Define display parameters
-WIDTH = 900
-HEIGHT = 900
-NODE_SIZE = 20
+WIDTH = 800
+HEIGHT = 800
+NODE_SIZE = 16
 LIMIT = WIDTH // NODE_SIZE    # total number of cells
+
+# Button parameters
+NUM_BTS = 4               # buttons per row
+BUFFER = 5                # buffer spaces between buttons
+BT_HEIGHT = 45
+BT_WIDTH = (WIDTH - (BUFFER*NUM_BTS)) // NUM_BTS
 
 # Font
 FONT_PATH = '/home/johnx/Projects/path-finding/font/OpenSans-Semibold.ttf'

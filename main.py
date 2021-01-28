@@ -2,6 +2,7 @@
     ...
 """
 
+import sys
 import random
 import time
 import pygame
@@ -72,17 +73,31 @@ def render_node(node, colour, display):
     pygame.draw.rect(display, colour, \
         [startx, starty, param.NODE_SIZE, param.NODE_SIZE]) # (x, y, width, height)
 
-def clear_previous(graph, display):
+def clear_path(graph, display):
     """
     Clear all paths and search process from previous search
     """
     for node in graph:
         graph[node].reset_parameters()
-        if graph[node].status == 'empty':
+        if graph[node].status in ['empty']:
             xpos = node[0] * param.NODE_SIZE
             ypos = node[1] * param.NODE_SIZE
             pygame.draw.rect(display, param.CREAM, \
                 [xpos, ypos, param.NODE_SIZE, param.NODE_SIZE])
+
+def clear_everything(graph, display):
+    """
+    Resets the board completely
+    """
+    for node in graph:
+        graph[node].reset_parameters()
+        if graph[node].status in ['empty', 'wall']:
+            graph[node].status = 'empty'
+            xpos = node[0] * param.NODE_SIZE
+            ypos = node[1] * param.NODE_SIZE
+            pygame.draw.rect(display, param.CREAM, \
+                [xpos, ypos, param.NODE_SIZE, param.NODE_SIZE])
+
 
 def start():
     """
@@ -113,39 +128,54 @@ def start():
     render_node(source, param.RED, display)     # render source node (red)
     render_node(target, param.GREEN, display)   # render target node (green)
 
-    # build random obstacles
-    grid.generate_obstacles()
+    # Set up the buttons
+    buttons= []
 
-    # Draw buttons
-    dijk = bt.Button(5, param.HEIGHT+4, (param.LIMIT/5)*param.NODE_SIZE, 45, 'Dijkstra')
-    astar = bt.Button(5, param.HEIGHT+dijk.height+6, \
-        (param.LIMIT/5)*param.NODE_SIZE, 45, 'A star')
-    reset = bt.Button(param.HEIGHT - (param.LIMIT/5)*param.NODE_SIZE - 5, \
-        param.HEIGHT+4, (param.LIMIT/5)*param.NODE_SIZE, 45, 'Randomize')
-    escape = bt.Button(param.HEIGHT - (param.LIMIT/5)*param.NODE_SIZE - 5, \
-        param.HEIGHT+reset.height+6, (param.LIMIT/5)*param.NODE_SIZE, 45, 'Quit')
-    dijk.render(display)
-    astar.render(display)
-    reset.render(display)
-    escape.render(display)
+    dijk = bt.Button(param.BUFFER, param.HEIGHT + 4, param.BT_WIDTH, param.BT_HEIGHT, 'Dijkstra')
+    astar = bt.Button(dijk.xpos + param.BT_WIDTH + param.BUFFER, param.HEIGHT + 4, \
+        param.BT_WIDTH, param.BT_HEIGHT, 'A*')
+    greedy = bt.Button(astar.xpos + param.BT_WIDTH + param.BUFFER, param.HEIGHT + 4, \
+        param.BT_WIDTH, param.BT_HEIGHT, 'Greedy')
+    dfs = bt.Button(greedy.xpos + param.BT_WIDTH + param.BUFFER, param.HEIGHT + 4, \
+        param.BT_WIDTH, param.BT_HEIGHT, 'DFS')
+    randmaze = bt.Button(param.BUFFER, param.HEIGHT+param.BT_HEIGHT+8, \
+        param.BT_WIDTH, param.BT_HEIGHT, 'Random Obstacles')
+    recursive = bt.Button(randmaze.xpos + param.BT_WIDTH + param.BUFFER, \
+        param.HEIGHT+param.BT_HEIGHT+8, param.BT_WIDTH, param.BT_HEIGHT, 'Recursive Maze')
+    reset = bt.Button(recursive.xpos + param.BT_WIDTH + param.BUFFER, \
+        param.HEIGHT+param.BT_HEIGHT+8, param.BT_WIDTH, param.BT_HEIGHT, 'Reset')
+    escape = bt.Button(reset.xpos + param.BT_WIDTH + param.BUFFER, param.HEIGHT+param.BT_HEIGHT+8, \
+        param.BT_WIDTH, param.BT_HEIGHT, 'Quit')
+
+    buttons.append(dijk)
+    buttons.append(astar)
+    buttons.append(greedy)
+    buttons.append(dfs)
+    buttons.append(randmaze)
+    buttons.append(recursive)
+    buttons.append(reset)
+    buttons.append(escape)
+
+    # draw the buttons
+    for bts in buttons:
+        bts.render(display)
 
     # start the game
     game_exit = False
     while not game_exit:
         # Get the mouse position
         mousepos = pygame.mouse.get_pos()
-        # Activate button
-        dijk.enable(*mousepos, display)
-        astar.enable(*mousepos, display)
-        reset.enable(*mousepos, display)
-        escape.enable(*mousepos, display)
+
+        # Activate buttons
+        for bts in buttons:
+            bts.enable(*mousepos, display)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 # Quit the application
                 print('Shutting down...')
                 pygame.quit()
-                quit()
+                sys.exit()
 
             # Click functionalities (set source and target nodes, drag walls, buttons)
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -159,34 +189,45 @@ def start():
                         print('corresponding grid number:', grid_num)
                         print('status:', grid.graph[xpos, ypos].status)
                 elif event.button == 1:     # button management
-                    if dijk.ypos < mousepos[1] < dijk.ypos + dijk.height and \
-                        dijk.xpos < mousepos[0] < dijk.xpos + dijk.width:   # dijkstra solve button
+                    algorithms = [dijk, astar, greedy, dfs]
+                    other_functions = [randmaze, recursive, reset, escape]
+                    for alg in algorithms:
+                        if alg.ypos < mousepos[1] < alg.ypos + alg.height and \
+                            alg.xpos < mousepos[0] < alg.xpos + alg.width:
 
-                        clear_previous(grid.graph, display)   # clear the previous results
-                        solution = grid.dijkstra(source, target)
+                            clear_path(grid.graph, display)   # clear the previous results
 
-                        if solution != -1:
-                            # render in the blocks for the path found
-                            render_path(source, target, solution, display)
+                            # compute the solution
+                            solution = -1
+                            if alg == dijk:
+                                solution = grid.dijkstra(source, target)
+                            elif alg == astar:
+                                solution = grid.astar(source, target)
+                            elif alg == greedy:
+                                solution = grid.greedy(source, target)
+                            elif alg == dfs:
+                                solution = grid.dfs(source, target)
 
-                    if astar.ypos < mousepos[1] < astar.ypos + astar.height and \
-                        astar.xpos < mousepos[0] < astar.xpos + astar.width:    # astar solve button
+                            if solution != -1:
+                                # render in the blocks for the path found
+                                render_path(source, target, solution, display)
 
-                        clear_previous(grid.graph, display)   # clear the previous results
-                        solution = grid.astar(source, target)
+                    for func in other_functions:
+                        if func.ypos < mousepos[1] < func.ypos + func.height and \
+                            func.xpos < mousepos[0] < func.xpos + func.width:
 
-                        if solution != -1:
-                            # render in the blocks for the path found
-                            render_path(source, target, solution, display)
+                            if func == randmaze:
+                                clear_everything(grid.graph, display)   # resets board
+                                grid.generate_obstacles()   # generate obstacles randomly
+                            if func == recursive:
+                                # do thing
+                                print('clicked recursive')
+                            if func == reset:
+                                start()
+                            if func == escape:
+                                pygame.quit()
+                                sys.exit()
 
-                    if reset.ypos < mousepos[1] < reset.ypos+reset.height and \
-                        reset.xpos < mousepos[0] < reset.xpos+reset.width:      # reset button
-                        start()
-
-                    if escape.ypos < mousepos[1] < escape.ypos+escape.height and \
-                        escape.xpos < mousepos[0] < escape.xpos+escape.width:   # quit button
-                        pygame.quit()
-                        quit()
                 elif event.button == 3: # left click starts drag mode
                     drag = True
 
@@ -204,7 +245,7 @@ def start():
                 render_walls(grid, mousepos, display)
         pygame.display.update()
     pygame.quit()
-    quit()
+    sys.exit()
 
 if __name__ == '__main__':
     start()
