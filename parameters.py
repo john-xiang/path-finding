@@ -2,7 +2,7 @@
     This file contains some predefined parameter values
 """
 # Chance for random obstacles
-CHANCE = 0.17
+CHANCE = 0.25
 
 # Define display parameters
 WIDTH = 800

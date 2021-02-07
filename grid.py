@@ -127,6 +127,119 @@ class Grid:
                 ypos = node[1] * param.NODE_SIZE
                 pygame.draw.rect(self.display, param.BLACK, \
                     [xpos, ypos, param.NODE_SIZE, param.NODE_SIZE])
+                time.sleep(0.001)
+                pygame.display.update()
+
+    def recursive_backtracking(self):
+        """
+            Generate a perfect maze with the recursive back-tracking algorithm.
+            This algorithm works by repeatedly drawing lines and removing portions
+            of the line.
+        """
+        # draw the boarder
+        for node in self.graph:
+            if (node[0] in range(param.LIMIT) and node[1] in (0, param.LIMIT-1)) or \
+                (node[1] in range(param.LIMIT) and node[0] in (0, param.LIMIT-1)) and \
+                self.graph[node].status not in ['source', 'target']:
+                pygame.draw.rect(self.display, param.BLACK, \
+                    [node[0]*param.NODE_SIZE, node[1]*param.NODE_SIZE,\
+                    param.NODE_SIZE, param.NODE_SIZE])
+                self.graph[node].status = 'wall'
+                time.sleep(0.006)
+                pygame.display.update()
+
+        # start recursive call
+        self.division(1, 1, param.LIMIT-2, param.LIMIT-2)
+
+    def division(self, xpos, ypos, width, height):
+        """
+            Recursively draws a wall and places a passage through the wall. Two new regions
+            are created after the wall is made. Apply division on both regions
+        """
+        # if the dimensions of width and height are less than 2 then return
+        if width < 2 or height < 2:
+            return
+
+        # determine horizontal or vertical line [0, 1]
+        if width < height:
+            direction = 0
+        elif height < width:
+            direction = 1
+        else:
+            direction = random.randint(0, 1)
+
+        # Randomly choose a location to render the walls
+        if direction == 0:  # horizontal wall
+            wall_min = min(ypos + 1, ypos + height - 2)
+            wall_max = max(ypos + 1, ypos + height - 2)
+
+            # set parameters for wall
+            wall_x = xpos
+            wall_y = random.randint(wall_min, wall_max)//2*2
+            wall_w = width
+            wall_h = 1
+
+            # choose a random area in the wall to carve out the passage
+            passage_x = random.randint(xpos, xpos + width - 1)//2*2+1
+            passage_y = wall_y
+            if passage_x > param.LIMIT - 2:
+                passage_x = param.LIMIT - 2
+
+            # Set the parameters of the new areas (one on each side of wall)
+            new_x1, new_y1 = xpos, ypos
+            new_w1 = new_w2 = width
+            new_h1 = wall_y - ypos
+            new_x2, new_y2 = xpos, wall_y + 1
+            new_h2 = ypos + height - wall_y - 1
+
+            # Update status on graph
+            for xcoord in range(xpos, xpos + width):
+                if self.graph[xcoord, wall_y].status == 'empty' and \
+                    xcoord != passage_x:
+                    self.graph[xcoord, wall_y].status = 'wall'
+        else:   # vertical wall
+            wall_min = min(xpos + 1, xpos + width - 2)
+            wall_max = max(xpos + 1, xpos + width - 2)
+
+            # set parameters for wall
+            wall_x = random.randint(wall_min, wall_max)//2*2
+            wall_y = ypos
+            wall_w = 1
+            wall_h = height
+
+            # choose a random spot to carve out the passage
+            passage_x = wall_x
+            passage_y = random.randint(ypos, ypos + height - 1)//2*2+1
+            if passage_y > param.LIMIT - 2:
+                passage_y = param.LIMIT - 2
+
+            # Set the parameters for the new areas
+            new_x1, new_y1 = xpos, ypos
+            new_w1 = wall_x - xpos
+            new_h1 = new_h2 = height
+            new_x2, new_y2 = wall_x + 1, ypos
+            new_w2 = xpos + width - wall_x - 1
+
+            # Update status of the graph
+            for ycoord in range(ypos, ypos + height):
+                if self.graph[wall_x, ycoord].status == 'empty' and \
+                    ycoord != passage_y:
+                    self.graph[wall_x, ycoord].status = 'wall'
+
+        # render walls and passage
+        pygame.draw.rect(self.display, param.BLACK, \
+            [wall_x * param.NODE_SIZE, wall_y * param.NODE_SIZE, \
+            wall_w * param.NODE_SIZE, wall_h * param.NODE_SIZE])
+        pygame.draw.rect(self.display, param.CREAM, \
+            [passage_x * param.NODE_SIZE, passage_y * param.NODE_SIZE, \
+            param.NODE_SIZE, param.NODE_SIZE])
+
+        time.sleep(0.06)
+        pygame.display.update()
+
+        # recurse through both sides of the wall
+        self.division(new_x1, new_y1, new_w1, new_h1)
+        self.division(new_x2, new_y2, new_w2, new_h2)
 
     def render_node(self, node, colour):
         """
@@ -180,7 +293,7 @@ class Grid:
         while len(path) <= path_dist:
             node = self.graph[node].previous
             path.append(node)
-        print('The path distance is', path_dist)
+        print('The distance of the path is', path_dist)
         return path
 
     def dijkstra(self, source, target):
@@ -241,6 +354,7 @@ class Grid:
                             continue
                         if neighbour == node[1]:
                             unvisited.decrease_key(index, (tentative_dist, neighbour))
+            time.sleep(0.0003)
             pygame.display.update() # update display
         # no path found
         return -1
@@ -309,7 +423,8 @@ class Grid:
                     if not self.graph[neighbour].inset:
                         self.graph[neighbour].inset = True
                         openset.insert((self.graph[neighbour].fscore, tentative_dist, neighbour))
-                pygame.display.update() # update display
+            time.sleep(0.009)
+            pygame.display.update() # update display
         #no paths are found
         return -1
 
@@ -372,8 +487,8 @@ class Grid:
                     if not self.graph[neighbour].inset:
                         self.graph[neighbour].inset = True
                         openset.insert((heuristic_value[neighbour], neighbour))
-                time.sleep(0.003)
-                pygame.display.update()
+            time.sleep(0.03)
+            pygame.display.update()
         # no paths found
         return -1
 
@@ -420,7 +535,9 @@ class Grid:
 
     def dfs(self, source, target):
         """
-            ...
+            DFS (depth first search) looks at the maze as a tree and searches along the height
+            of the tree first. This kind of search is not optimal so it will not return the
+            shortest path
         """
         openset = deque()
         self.graph[source].distance = 0     # set initial distance to 0
@@ -435,19 +552,13 @@ class Grid:
             self.graph[current].visited = True                  # mark current node as visited
             self.render_node(current, param.LT_BLUE)            # render the current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
-            tentative_dist = self.graph[current].distance + 1
 
             for neighbour in current_neighbours:
                 if not self.graph[neighbour].visited:
-                    if tentative_dist < self.graph[neighbour].distance:
-                        # update the previous node and distance
-                        self.graph[neighbour].previous = current
-                        self.graph[neighbour].distance = self.graph[current].distance + 1
-
-                    # add the node into the stack if it wasn't in it before
-                    if not self.graph[neighbour].inset:
-                        self.graph[neighbour].inset = True
-                        openset.append(neighbour)
-                pygame.display.update()
+                    self.graph[neighbour].previous = current
+                    self.graph[neighbour].distance = self.graph[current].distance + 1
+                    openset.append(neighbour)
+            time.sleep(0.03)
+            pygame.display.update()
         # no path found
         return -1

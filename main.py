@@ -44,6 +44,7 @@ def render_walls(graph, mousepos, display):
             [xstart, ystart, param.NODE_SIZE, param.NODE_SIZE])
         # change the status of nodes that have become obstacles ('wall')
         graph.graph[xpos, ypos].status = 'wall'
+    pygame.display.update()
 
 def render_path(source, target, path, display):
     """
@@ -72,6 +73,7 @@ def render_node(node, colour, display):
     # render the colour
     pygame.draw.rect(display, colour, \
         [startx, starty, param.NODE_SIZE, param.NODE_SIZE]) # (x, y, width, height)
+    pygame.display.update()
 
 def clear_path(graph, display):
     """
@@ -84,6 +86,7 @@ def clear_path(graph, display):
             ypos = node[1] * param.NODE_SIZE
             pygame.draw.rect(display, param.CREAM, \
                 [xpos, ypos, param.NODE_SIZE, param.NODE_SIZE])
+    pygame.display.update()
 
 def clear_everything(graph, display):
     """
@@ -97,6 +100,7 @@ def clear_everything(graph, display):
             ypos = node[1] * param.NODE_SIZE
             pygame.draw.rect(display, param.CREAM, \
                 [xpos, ypos, param.NODE_SIZE, param.NODE_SIZE])
+    pygame.display.update()
 
 
 def start():
@@ -118,11 +122,11 @@ def start():
     grid.build_graph()
 
     # Initiate and draw the start and end nodes
-    source = (random.randint(0, param.LIMIT-1), random.randint(0, param.LIMIT-1))
-    target = (random.randint(0, param.LIMIT-1), random.randint(0, param.LIMIT-1))
+    source = (random.randint(1, param.LIMIT-2), random.randint(1, param.LIMIT-2))
+    target = (random.randint(1, param.LIMIT-2), random.randint(1, param.LIMIT-2))
     while source == target: # if the source and target are the same then re-randomize
-        source = (random.randint(0, param.LIMIT-1), random.randint(0, param.LIMIT-1))
-        target = (random.randint(0, param.LIMIT-1), random.randint(0, param.LIMIT-1))
+        source = (random.randint(1, param.LIMIT-2), random.randint(1, param.LIMIT-2))
+        target = (random.randint(1, param.LIMIT-2), random.randint(1, param.LIMIT-2))
     grid.graph[source].status = 'start'
     grid.graph[target].status = 'end'
     render_node(source, param.RED, display)     # render source node (red)
@@ -191,7 +195,7 @@ def start():
                 elif event.button == 1:     # button management
                     algorithms = [dijk, astar, greedy, dfs]
                     other_functions = [randmaze, recursive, reset, escape]
-                    for alg in algorithms:
+                    for alg in algorithms:      # loop through algorithms
                         if alg.ypos < mousepos[1] < alg.ypos + alg.height and \
                             alg.xpos < mousepos[0] < alg.xpos + alg.width:
 
@@ -212,16 +216,20 @@ def start():
                                 # render in the blocks for the path found
                                 render_path(source, target, solution, display)
 
-                    for func in other_functions:
+                    for func in other_functions:    # loop through other functions
                         if func.ypos < mousepos[1] < func.ypos + func.height and \
                             func.xpos < mousepos[0] < func.xpos + func.width:
 
                             if func == randmaze:
+                                # generate obstacles randomly
                                 clear_everything(grid.graph, display)   # resets board
-                                grid.generate_obstacles()   # generate obstacles randomly
+                                grid.generate_obstacles()
                             if func == recursive:
-                                # do thing
-                                print('clicked recursive')
+                                # generate a perfect maze with recursive backtracking
+                                clear_everything(grid.graph, display)
+                                grid.recursive_backtracking()
+                                render_node(source, param.RED, display)
+                                render_node(target, param.GREEN, display)
                             if func == reset:
                                 start()
                             if func == escape:
