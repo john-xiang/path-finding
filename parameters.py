@@ -7,7 +7,7 @@ CHANCE = 0.25
 # Define display parameters
 WIDTH = 800
 HEIGHT = 800
-NODE_SIZE = 16
+NODE_SIZE = 20
 LIMIT = WIDTH // NODE_SIZE    # total number of cells
 
 # Button parameters
@@ -31,7 +31,7 @@ BLUE = (0, 0, 255)
 LT_BLUE = (37, 194, 221)
 DRK_BLUE = (0, 0, 128)
 ORANGE = (255, 128, 0)
-PURPLE = (128, 0, 255)
+PURPLE = (179,128,223)
 YELLOW = (255, 255, 0)
 LT_YELLOW = (155, 155, 0)
 GREY = (143, 143, 143)

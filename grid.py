@@ -183,6 +183,7 @@ class Grid:
             passage_x = random.randint(xpos, xpos + width - 1)//2*2+1
             passage_y = wall_y
             if passage_x > param.LIMIT - 2:
+                print('redoing x')
                 passage_x = param.LIMIT - 2
 
             # Set the parameters of the new areas (one on each side of wall)
@@ -211,6 +212,7 @@ class Grid:
             passage_x = wall_x
             passage_y = random.randint(ypos, ypos + height - 1)//2*2+1
             if passage_y > param.LIMIT - 2:
+                print('redoing y')
                 passage_y = param.LIMIT - 2
 
             # Set the parameters for the new areas
@@ -296,7 +298,7 @@ class Grid:
         print('The distance of the path is', path_dist)
         return path
 
-    def dijkstra(self, source, target):
+    def dijkstra(self, source, target, speed=None):
         """
             Dijkstra's algorithm finds the shortest path between a source and target node.
                 1) All nodes are initially unvisited
@@ -338,6 +340,8 @@ class Grid:
             self.render_node(current, param.LT_BLUE)            # render the curent node
             tentative_dist = self.graph[current].distance + 1   # tentative distance
             current_neighbours = self.find_neighbours(current)  # find neighbours
+            if speed is None:
+                pygame.display.update()
 
             for neighbour in current_neighbours:
                 # Check if the current path found is better than the previously record one
@@ -354,12 +358,14 @@ class Grid:
                             continue
                         if neighbour == node[1]:
                             unvisited.decrease_key(index, (tentative_dist, neighbour))
-            time.sleep(0.0003)
-            pygame.display.update() # update display
+                    self.render_node(neighbour, param.PURPLE)
+            if speed is None:
+                time.sleep(0.0003)
+                pygame.display.update()
         # no path found
         return -1
 
-    def astar(self, source, target):
+    def astar(self, source, target, speed=None):
         """
             The A* algorithm is an extention of Dijkstra where a heuristic is applied to
             guide the search towards the target node. The heuristic of choice here
@@ -410,6 +416,8 @@ class Grid:
             self.render_node(current, param.LT_BLUE)            # render the current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
             tentative_dist = self.graph[current].distance + 1   # set the tentative distance
+            if speed is None:
+                pygame.display.update()
 
             for neighbour in current_neighbours:
                 if not self.graph[neighbour].visited:
@@ -423,12 +431,14 @@ class Grid:
                     if not self.graph[neighbour].inset:
                         self.graph[neighbour].inset = True
                         openset.insert((self.graph[neighbour].fscore, tentative_dist, neighbour))
-            time.sleep(0.009)
-            pygame.display.update() # update display
+                        self.render_node(neighbour, param.PURPLE)
+            if speed is None:
+                time.sleep(0.009)
+                pygame.display.update() # update display
         #no paths are found
         return -1
 
-    def greedy(self, source, target):
+    def greedy(self, source, target, speed=None):
         """
             The greedy best-first search is a greedy algorithm that only considers the
             heuristic value and chooses the best option at each iteration during the search.
@@ -474,6 +484,8 @@ class Grid:
             self.render_node(current, param.LT_BLUE)            # render current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
             tentative_dist = self.graph[current].distance + 1   # set the tentative distance
+            if speed is None:
+                pygame.display.update()
 
             for neighbour in current_neighbours:
                 # Compute the distance (heuristic) of all neighbours and add to openset set
@@ -487,12 +499,14 @@ class Grid:
                     if not self.graph[neighbour].inset:
                         self.graph[neighbour].inset = True
                         openset.insert((heuristic_value[neighbour], neighbour))
-            time.sleep(0.03)
-            pygame.display.update()
+                        self.render_node(neighbour, param.PURPLE)
+            if speed is None:
+                time.sleep(0.03)
+                pygame.display.update()
         # no paths found
         return -1
 
-    def bfs(self, source, target):
+    def bfs(self, source, target, speed=None):
         """
             The breadth-first search algorithm searches through each node of the
             current depth of the graph before moving onto the next depth level. BFS
@@ -529,11 +543,13 @@ class Grid:
                     if not self.graph[neighbour].inset:
                         self.graph[neighbour].inset = True
                         openset.append(neighbour)
-            pygame.display.update()
+                        self.render_node(neighbour, param.PURPLE)
+            if speed is None:
+                pygame.display.update()
         # no paths found!
         return -1
 
-    def dfs(self, source, target):
+    def dfs(self, source, target, speed=None):
         """
             DFS (depth first search) looks at the maze as a tree and searches along the height
             of the tree first. This kind of search is not optimal so it will not return the
@@ -552,13 +568,21 @@ class Grid:
             self.graph[current].visited = True                  # mark current node as visited
             self.render_node(current, param.LT_BLUE)            # render the current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
+            if speed is None:
+                pygame.display.update()
 
             for neighbour in current_neighbours:
                 if not self.graph[neighbour].visited:
                     self.graph[neighbour].previous = current
                     self.graph[neighbour].distance = self.graph[current].distance + 1
-                    openset.append(neighbour)
-            time.sleep(0.03)
-            pygame.display.update()
+
+                    # add the neighbour into the queue if it wasn't in it before
+                    if not self.graph[neighbour].inset:
+                        self.graph[neighbour].inset = True
+                        openset.append(neighbour)
+                        self.render_node(neighbour, param.PURPLE)
+            if speed is None:
+                pygame.display.update()
+                time.sleep(0.03)
         # no path found
         return -1

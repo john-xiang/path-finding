@@ -46,7 +46,7 @@ def render_walls(graph, mousepos, display):
         graph.graph[xpos, ypos].status = 'wall'
     pygame.display.update()
 
-def render_path(source, target, path, display):
+def render_path(source, target, path, display, speed=None):
     """
     This function renders the computed path onto the display
     """
@@ -59,8 +59,9 @@ def render_path(source, target, path, display):
         # colour in the path
         pygame.draw.rect(display, param.YELLOW, \
             [xstart, ystart, param.NODE_SIZE, param.NODE_SIZE])
-        time.sleep(0.03)
-        pygame.display.update()
+        if speed is None:
+            time.sleep(0.03)
+            pygame.display.update()
 
 def render_node(node, colour, display):
     """
@@ -109,7 +110,9 @@ def start():
     """
     # Variables for click and drag functions
     clicked = False
+    clicked_node = None
     drag = False
+    alg_selected = ''
 
     # initiate pygame
     pygame.init()
@@ -184,14 +187,13 @@ def start():
             # Click functionalities (set source and target nodes, drag walls, buttons)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 (xpos, ypos) = (mousepos[0] // param.NODE_SIZE, mousepos[1] // param.NODE_SIZE)
-                if event.button == 1 and mousepos[1] < param.HEIGHT:
-                    # TODO: add functionality to adjust start and end nodes
-                    clicked = True
-                    if clicked:
-                        print('clicked:', (xpos, ypos))
-                        grid_num = convert2single(xpos, ypos)
-                        print('corresponding grid number:', grid_num)
-                        print('status:', grid.graph[xpos, ypos].status)
+                if event.button == 1 and mousepos[1] < param.LIMIT * param.NODE_SIZE:
+                    cell_num = (mousepos[0] // param.NODE_SIZE, mousepos[1] // param.NODE_SIZE)
+
+                    if cell_num in (source, target):
+                        clicked = True
+                        clicked_node = cell_num
+
                 elif event.button == 1:     # button management
                     algorithms = [dijk, astar, greedy, dfs]
                     other_functions = [randmaze, recursive, reset, escape]
@@ -205,12 +207,16 @@ def start():
                             solution = -1
                             if alg == dijk:
                                 solution = grid.dijkstra(source, target)
+                                alg_selected = 'dijk'
                             elif alg == astar:
                                 solution = grid.astar(source, target)
+                                alg_selected = 'astar'
                             elif alg == greedy:
                                 solution = grid.greedy(source, target)
+                                alg_selected = 'greedy'
                             elif alg == dfs:
                                 solution = grid.dfs(source, target)
+                                alg_selected = 'dfs'
 
                             if solution != -1:
                                 # render in the blocks for the path found
@@ -243,6 +249,7 @@ def start():
                 # update click variables
                 clicked = False
                 drag = False
+                clicked_node = None
 
             elif event.type == pygame.MOUSEMOTION and drag:
                 # render the walls where the mouse drags to
@@ -251,6 +258,47 @@ def start():
                     # mouse out of bounds
                     continue
                 render_walls(grid, mousepos, display)
+
+            elif event.type == pygame.MOUSEMOTION and clicked:
+                # move the node if it's in source or target
+                cell_num = (mousepos[0] // param.NODE_SIZE, mousepos[1] // param.NODE_SIZE)
+                if cell_num[0] >= param.LIMIT or cell_num[1] >= param.LIMIT:
+                    # out of bounds
+                    continue
+                if grid.graph[cell_num].status != 'wall' and cell_num not in (source, target):
+                    # update grid status
+                    grid.graph[clicked_node].status = 'empty'
+                    # render new location of node
+                    if clicked_node == source:
+                        render_node(source, param.CREAM, display)
+                        render_node(cell_num, param.RED, display)
+                        clicked_node = source = cell_num
+                    elif clicked_node == target:
+                        render_node(target, param.CREAM, display)
+                        render_node(cell_num, param.GREEN, display)
+                        clicked_node = target = cell_num
+                    grid.graph[source].status = 'source'
+                    grid.graph[target].status = 'target'
+
+                    # compute new if solved beforesolution
+                    solution = -1
+                    if alg_selected == 'dijk':
+                        clear_path(grid.graph, display)
+                        solution = grid.dijkstra(source, target, 1)
+                    elif alg_selected == 'astar':
+                        clear_path(grid.graph, display)
+                        solution = grid.astar(source, target, 1)
+                    elif alg_selected == 'greedy':
+                        clear_path(grid.graph, display)
+                        solution = grid.greedy(source, target, 1)
+                    elif alg_selected == 'dfs':
+                        clear_path(grid.graph, display)
+                        solution = grid.dfs(source, target, 1)
+
+                    if solution != -1:
+                        render_path(source, target, solution, display, 1)
+
+                pygame.display.update()
         pygame.display.update()
     pygame.quit()
     sys.exit()
