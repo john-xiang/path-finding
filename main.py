@@ -227,6 +227,8 @@ def start():
                                 # generate obstacles randomly
                                 clear_everything(grid.graph, display)   # resets board
                                 grid.generate_obstacles()
+                                render_node(source, param.RED, display)
+                                render_node(target, param.GREEN, display)
                                 alg_selected = ''
                             if func == recursive:
                                 # generate a perfect maze with recursive backtracking
@@ -267,19 +269,20 @@ def start():
                 if grid.graph[cell_num].status != 'wall' and cell_num not in (source, target):
                     # update grid status
                     grid.graph[clicked_node].status = 'empty'
-                    # render new location of node
-                    if clicked_node == source:
-                        render_node(source, param.CREAM, display)
+                    if clicked_node == source: # render new location of node
+                        if alg_selected == '':
+                            render_node(clicked_node, param.CREAM, display)
                         render_node(cell_num, param.RED, display)
                         clicked_node = source = cell_num
                     elif clicked_node == target:
-                        render_node(target, param.CREAM, display)
+                        if alg_selected == '':
+                            render_node(clicked_node, param.CREAM, display)
                         render_node(cell_num, param.GREEN, display)
                         clicked_node = target = cell_num
                     grid.graph[source].status = 'source'
                     grid.graph[target].status = 'target'
 
-                    # compute new solution
+                    # compute new solution if a solution was computed before
                     solution = -1
                     if alg_selected == 'dijk':
                         clear_path(grid.graph, display)
