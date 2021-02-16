@@ -44,7 +44,6 @@ def render_walls(graph, mousepos, display):
             [xstart, ystart, param.NODE_SIZE, param.NODE_SIZE])
         # change the status of nodes that have become obstacles ('wall')
         graph.graph[xpos, ypos].status = 'wall'
-    pygame.display.update()
 
 def render_path(source, target, path, display, speed=None):
     """
@@ -70,11 +69,9 @@ def render_node(node, colour, display):
     """
     startx = node[0] * param.NODE_SIZE
     starty = node[1] * param.NODE_SIZE
-
     # render the colour
     pygame.draw.rect(display, colour, \
         [startx, starty, param.NODE_SIZE, param.NODE_SIZE]) # (x, y, width, height)
-    pygame.display.update()
 
 def clear_path(graph, display):
     """
@@ -83,11 +80,11 @@ def clear_path(graph, display):
     for node in graph:
         graph[node].reset_parameters()
         if graph[node].status in ['empty']:
-            xpos = node[0] * param.NODE_SIZE
-            ypos = node[1] * param.NODE_SIZE
-            pygame.draw.rect(display, param.CREAM, \
-                [xpos, ypos, param.NODE_SIZE, param.NODE_SIZE])
-    pygame.display.update()
+            render_node(node, param.CREAM, display)
+        if graph[node].status in ['start']:
+            render_node(node, param.RED, display)
+        if graph[node].status in ['end']:
+            render_node(node, param.GREEN, display)
 
 def clear_everything(graph, display):
     """
@@ -97,11 +94,11 @@ def clear_everything(graph, display):
         graph[node].reset_parameters()
         if graph[node].status in ['empty', 'wall']:
             graph[node].status = 'empty'
-            xpos = node[0] * param.NODE_SIZE
-            ypos = node[1] * param.NODE_SIZE
-            pygame.draw.rect(display, param.CREAM, \
-                [xpos, ypos, param.NODE_SIZE, param.NODE_SIZE])
-    pygame.display.update()
+            render_node(node, param.CREAM, display)
+        if graph[node].status in ['start']:
+            render_node(node, param.RED, display)
+        if graph[node].status in ['end']:
+            render_node(node, param.GREEN, display)
 
 
 def start():
@@ -230,12 +227,14 @@ def start():
                                 # generate obstacles randomly
                                 clear_everything(grid.graph, display)   # resets board
                                 grid.generate_obstacles()
+                                alg_selected = ''
                             if func == recursive:
                                 # generate a perfect maze with recursive backtracking
                                 clear_everything(grid.graph, display)
                                 grid.recursive_backtracking()
                                 render_node(source, param.RED, display)
                                 render_node(target, param.GREEN, display)
+                                alg_selected = ''
                             if func == reset:
                                 start()
                             if func == escape:
@@ -280,7 +279,7 @@ def start():
                     grid.graph[source].status = 'source'
                     grid.graph[target].status = 'target'
 
-                    # compute new if solved beforesolution
+                    # compute new solution
                     solution = -1
                     if alg_selected == 'dijk':
                         clear_path(grid.graph, display)
@@ -298,7 +297,6 @@ def start():
                     if solution != -1:
                         render_path(source, target, solution, display, 1)
 
-                pygame.display.update()
         pygame.display.update()
     pygame.quit()
     sys.exit()

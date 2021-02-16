@@ -183,7 +183,6 @@ class Grid:
             passage_x = random.randint(xpos, xpos + width - 1)//2*2+1
             passage_y = wall_y
             if passage_x > param.LIMIT - 2:
-                print('redoing x')
                 passage_x = param.LIMIT - 2
 
             # Set the parameters of the new areas (one on each side of wall)
@@ -212,7 +211,6 @@ class Grid:
             passage_x = wall_x
             passage_y = random.randint(ypos, ypos + height - 1)//2*2+1
             if passage_y > param.LIMIT - 2:
-                print('redoing y')
                 passage_y = param.LIMIT - 2
 
             # Set the parameters for the new areas
@@ -317,52 +315,41 @@ class Grid:
             Helper function
                 find_neighbours(node): used to help compute neighbours for a given node.
         """
-        unvisited = minh.MinHeap()          # build the min heap priority queue
-        self.graph[source].distance = 0     # set the distance of source to 0
-        unvisited.build_heap([(self.graph[node].distance, node) for node in self.graph])
+        openset = minh.MinHeap()
+        # set the distance of source to 0
+        self.graph[source].distance = 0
+        # insert source node (dist, node)
+        openset.insert((self.graph[source].distance, source))
 
-        while unvisited:
-            extracted_min = unvisited.extract_min()   # set current and extract from unvisited
+        while openset:
+            # Set the current node as the node with minimum fscore value
+            extracted_min = openset.extract_min()
             current = extracted_min[1]
 
-            if current == target:   # at the target node! don't need to search further
+            if current == target:           # reached the target! return path
                 return self.find_path(target)
 
-            if self.graph[current].distance == math.inf:
-                # the distance is inf only when there's no other nodes to consider
-                return -1
-
-            if self.graph[current].status == 'wall':
-                # skip the current node if it's a wall since we can't traverse it
-                continue
-
             self.graph[current].visited = True                  # mark current as visited
-            self.render_node(current, param.LT_BLUE)            # render the curent node
-            tentative_dist = self.graph[current].distance + 1   # tentative distance
+            self.render_node(current, param.LT_BLUE)            # render the current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
-            if speed is None:
-                pygame.display.update()
+            tentative_dist = self.graph[current].distance + 1   # set the tentative distance
 
             for neighbour in current_neighbours:
-                # Check if the current path found is better than the previously record one
-                if not self.graph[neighbour].visited and \
-                    tentative_dist < self.graph[neighbour].distance:
+                if not self.graph[neighbour].visited:
+                    # Update distance, previous, fscore
+                    if tentative_dist < self.graph[neighbour].distance:
+                        self.graph[neighbour].distance = tentative_dist
+                        self.graph[neighbour].previous = current
 
-                    # update distance and previous
-                    self.graph[neighbour].distance = tentative_dist
-                    self.graph[neighbour].previous = current
-
-                    # update priority queue
-                    for index, node in enumerate(unvisited.items()):
-                        if node == 0:   # skip the 0th element
-                            continue
-                        if neighbour == node[1]:
-                            unvisited.decrease_key(index, (tentative_dist, neighbour))
-                    self.render_node(neighbour, param.PURPLE)
+                    # Add the node to the openset set
+                    if not self.graph[neighbour].inset:
+                        self.graph[neighbour].inset = True
+                        openset.insert((tentative_dist, neighbour))
+                        self.render_node(neighbour, param.PURPLE)
             if speed is None:
-                time.sleep(0.0003)
-                pygame.display.update()
-        # no path found
+                time.sleep(0.0025)
+                pygame.display.update() # update display
+        #no paths are found
         return -1
 
     def astar(self, source, target, speed=None):
@@ -416,8 +403,6 @@ class Grid:
             self.render_node(current, param.LT_BLUE)            # render the current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
             tentative_dist = self.graph[current].distance + 1   # set the tentative distance
-            if speed is None:
-                pygame.display.update()
 
             for neighbour in current_neighbours:
                 if not self.graph[neighbour].visited:
@@ -433,7 +418,7 @@ class Grid:
                         openset.insert((self.graph[neighbour].fscore, tentative_dist, neighbour))
                         self.render_node(neighbour, param.PURPLE)
             if speed is None:
-                time.sleep(0.009)
+                time.sleep(0.0075)
                 pygame.display.update() # update display
         #no paths are found
         return -1
@@ -484,8 +469,6 @@ class Grid:
             self.render_node(current, param.LT_BLUE)            # render current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
             tentative_dist = self.graph[current].distance + 1   # set the tentative distance
-            if speed is None:
-                pygame.display.update()
 
             for neighbour in current_neighbours:
                 # Compute the distance (heuristic) of all neighbours and add to openset set
@@ -501,7 +484,7 @@ class Grid:
                         openset.insert((heuristic_value[neighbour], neighbour))
                         self.render_node(neighbour, param.PURPLE)
             if speed is None:
-                time.sleep(0.03)
+                time.sleep(0.04)
                 pygame.display.update()
         # no paths found
         return -1
@@ -568,8 +551,6 @@ class Grid:
             self.graph[current].visited = True                  # mark current node as visited
             self.render_node(current, param.LT_BLUE)            # render the current node
             current_neighbours = self.find_neighbours(current)  # find neighbours
-            if speed is None:
-                pygame.display.update()
 
             for neighbour in current_neighbours:
                 if not self.graph[neighbour].visited:
@@ -586,3 +567,68 @@ class Grid:
                 time.sleep(0.03)
         # no path found
         return -1
+
+        # def dijkstra(self, source, target, speed=None):
+        # """
+        #     Dijkstra's algorithm finds the shortest path between a source and target node.
+        #         1) All nodes are initially unvisited
+        #         2) set the source node as the current node
+        #         3) Initialize the tentative distance of the source node as 0
+        #             all other nodes have distance of infinity
+        #         4) While target node is unvisited
+        #             a) compute the distance between current node and each neighbour node
+        #             b) if computed distance is smaller than replace as current distance
+        #             c) remove the current node from the unvisited list and continue
+        #         5) Display result
+
+        #     Inputs: the source node and the target node.
+        #     Outputs: the computed path and its length. If there are no paths then return -1
+
+        #     Helper function
+        #         find_neighbours(node): used to help compute neighbours for a given node.
+        # """
+        # unvisited = minh.MinHeap()          # build the min heap priority queue
+        # self.graph[source].distance = 0     # set the distance of source to 0
+        # unvisited.build_heap([(self.graph[node].distance, node) for node in self.graph])
+
+        # while unvisited:
+        #     extracted_min = unvisited.extract_min()   # set current and extract from unvisited
+        #     current = extracted_min[1]
+
+        #     if current == target:   # at the target node! don't need to search further
+        #         return self.find_path(target)
+
+        #     if self.graph[current].distance == math.inf:
+        #         # the distance is inf only when there's no other nodes to consider
+        #         return -1
+
+        #     if self.graph[current].status == 'wall':
+        #         # skip the current node if it's a wall since we can't traverse it
+        #         continue
+
+        #     self.graph[current].visited = True                  # mark current as visited
+        #     self.render_node(current, param.LT_BLUE)            # render the curent node
+        #     tentative_dist = self.graph[current].distance + 1   # tentative distance
+        #     current_neighbours = self.find_neighbours(current)  # find neighbours
+
+        #     for neighbour in current_neighbours:
+        #         # Check if the current path found is better than the previously record one
+        #         if not self.graph[neighbour].visited and \
+        #             tentative_dist < self.graph[neighbour].distance:
+
+        #             # update distance and previous
+        #             self.graph[neighbour].distance = tentative_dist
+        #             self.graph[neighbour].previous = current
+
+        #             # update priority queue
+        #             for index, node in enumerate(unvisited.items()):
+        #                 if node == 0:   # skip the 0th element
+        #                     continue
+        #                 if neighbour == node[1]:
+        #                     unvisited.decrease_key(index, (tentative_dist, neighbour))
+        #             self.render_node(neighbour, param.PURPLE)
+        #     if speed is None:
+        #         time.sleep(0.0003)
+        #         pygame.display.update()
+        # # no path found
+        # return -1
