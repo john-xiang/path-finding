@@ -147,7 +147,6 @@ class Grid:
                 self.graph[node].status = 'wall'
                 time.sleep(0.006)
                 pygame.display.update()
-
         # start recursive call
         self.division(1, 1, param.LIMIT-2, param.LIMIT-2)
 
@@ -197,6 +196,7 @@ class Grid:
                 if self.graph[xcoord, wall_y].status == 'empty' and \
                     xcoord != passage_x:
                     self.graph[xcoord, wall_y].status = 'wall'
+            self.graph[passage_x, wall_y].status = 'empty'
         else:   # vertical wall
             wall_min = min(xpos + 1, xpos + width - 2)
             wall_max = max(xpos + 1, xpos + width - 2)
@@ -225,6 +225,7 @@ class Grid:
                 if self.graph[wall_x, ycoord].status == 'empty' and \
                     ycoord != passage_y:
                     self.graph[wall_x, ycoord].status = 'wall'
+            self.graph[wall_x, passage_y].status = 'empty'
 
         # render walls and passage
         pygame.draw.rect(self.display, param.BLACK, \

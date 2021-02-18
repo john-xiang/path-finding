@@ -124,9 +124,11 @@ def start():
     # Initiate and draw the start and end nodes
     source = (random.randint(1, param.LIMIT-2), random.randint(1, param.LIMIT-2))
     target = (random.randint(1, param.LIMIT-2), random.randint(1, param.LIMIT-2))
+
     while source == target: # if the source and target are the same then re-randomize
         source = (random.randint(1, param.LIMIT-2), random.randint(1, param.LIMIT-2))
         target = (random.randint(1, param.LIMIT-2), random.randint(1, param.LIMIT-2))
+
     grid.graph[source].status = 'start'
     grid.graph[target].status = 'end'
     render_node(source, param.RED, display)     # render source node (red)
@@ -184,9 +186,9 @@ def start():
             # Click functionalities (set source and target nodes, drag walls, buttons)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 (xpos, ypos) = (mousepos[0] // param.NODE_SIZE, mousepos[1] // param.NODE_SIZE)
+
                 if event.button == 1 and mousepos[1] < param.LIMIT * param.NODE_SIZE:
                     cell_num = (mousepos[0] // param.NODE_SIZE, mousepos[1] // param.NODE_SIZE)
-
                     if cell_num in (source, target):
                         clicked = True
                         clicked_node = cell_num
@@ -194,6 +196,7 @@ def start():
                 elif event.button == 1:     # button management
                     algorithms = [dijk, astar, greedy, dfs]
                     other_functions = [randmaze, recursive, reset, escape]
+
                     for alg in algorithms:      # loop through algorithms
                         if alg.ypos < mousepos[1] < alg.ypos + alg.height and \
                             alg.xpos < mousepos[0] < alg.xpos + alg.width:
@@ -263,12 +266,15 @@ def start():
             elif event.type == pygame.MOUSEMOTION and clicked:
                 # move the node if it's in source or target
                 cell_num = (mousepos[0] // param.NODE_SIZE, mousepos[1] // param.NODE_SIZE)
+
                 if cell_num[0] >= param.LIMIT or cell_num[1] >= param.LIMIT:
                     # out of bounds
                     continue
+
                 if grid.graph[cell_num].status != 'wall' and cell_num not in (source, target):
                     # update grid status
                     grid.graph[clicked_node].status = 'empty'
+
                     if clicked_node == source: # render new location of node
                         if alg_selected == '':
                             render_node(clicked_node, param.CREAM, display)
