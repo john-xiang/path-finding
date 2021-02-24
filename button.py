@@ -28,7 +28,7 @@ class Button:
         """
         Function returns the text to render and the rectangle it covers
         """
-        font = pygame.font.Font(self.font, 20)
+        font = pygame.font.Font(self.font, 19)
         textsurface = font.render(text, True, param.BLACK)
         return textsurface, textsurface.get_rect()
 
