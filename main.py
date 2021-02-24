@@ -100,7 +100,6 @@ def clear_everything(graph, display):
         if graph[node].status in ['end']:
             render_node(node, param.GREEN, display)
 
-
 def start():
     """
     Main function that handles most of the rendering and logic
@@ -137,14 +136,14 @@ def start():
     # Set up the buttons
     buttons= []
 
-    dijk = bt.Button(param.BUFFER, param.HEIGHT + 4, param.BT_WIDTH, param.BT_HEIGHT, 'Dijkstra')
+    dijk = bt.Button(2, param.HEIGHT + 4, param.BT_WIDTH, param.BT_HEIGHT, 'Dijkstra')
     astar = bt.Button(dijk.xpos + param.BT_WIDTH + param.BUFFER, param.HEIGHT + 4, \
         param.BT_WIDTH, param.BT_HEIGHT, 'A*')
     greedy = bt.Button(astar.xpos + param.BT_WIDTH + param.BUFFER, param.HEIGHT + 4, \
         param.BT_WIDTH, param.BT_HEIGHT, 'Greedy')
     dfs = bt.Button(greedy.xpos + param.BT_WIDTH + param.BUFFER, param.HEIGHT + 4, \
         param.BT_WIDTH, param.BT_HEIGHT, 'DFS')
-    randmaze = bt.Button(param.BUFFER, param.HEIGHT+param.BT_HEIGHT+8, \
+    randmaze = bt.Button(2, param.HEIGHT+param.BT_HEIGHT+8, \
         param.BT_WIDTH, param.BT_HEIGHT, 'Random Obstacles')
     recursive = bt.Button(randmaze.xpos + param.BT_WIDTH + param.BUFFER, \
         param.HEIGHT+param.BT_HEIGHT+8, param.BT_WIDTH, param.BT_HEIGHT, 'Recursive Maze')
