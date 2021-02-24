@@ -2,7 +2,7 @@
     This file contains some predefined parameter values
 """
 # Chance for random obstacles
-CHANCE = 0.25
+CHANCE = 0.27
 
 # Define display parameters
 WIDTH = 800
@@ -12,12 +12,12 @@ LIMIT = WIDTH // NODE_SIZE    # total number of cells
 
 # Button parameters
 NUM_BTS = 4               # buttons per row
-BUFFER = 5                # buffer spaces between buttons
+BUFFER = 8                # buffer spaces between buttons
 BT_HEIGHT = 45
-BT_WIDTH = (WIDTH - (BUFFER*NUM_BTS)) // NUM_BTS
+BT_WIDTH = ((WIDTH-4) - (BUFFER*(NUM_BTS-1))) // NUM_BTS
 
 # Font
-FONT_PATH = '/home/johnx/Projects/path-finding/font/OpenSans-Semibold.ttf'
+FONT_PATH = '/home/johnx/Projects/path-finding/misc/OpenSans-Semibold.ttf'
 
 # Define some colors
 BLACK = (0, 0, 0)
